@@ -10,6 +10,7 @@ packages-git/repos.lst::
 	find packages-git/mer-core packages-git/mer-crosshelpers -mindepth 1 -maxdepth 1 -type d -printf "%p\n" | sort > packages-git/repos.lst
 
 packages-git/mappingscache.xml: packages-git/repos.lst
+	if [ ! -e $@ ]; then echo '<mappings />' > $@ ; fi
 	python tools/makemappings.py $^ $@
 	
 lastevents:
