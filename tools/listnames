@@ -1,0 +1,12 @@
+#!/bin/sh
+
+cd $1
+TMPFILE=$2
+shift
+shift
+
+echo '<binarylist>' > $TMPFILE
+for x in $@; do
+	grep "filename=\"$x.rpm\"" _names >> $TMPFILE
+done
+echo '</binarylist>' >> $TMPFILE

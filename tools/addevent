@@ -1,0 +1,11 @@
+#!/bin/sh
+touch lastevents
+LAST=`tail -n 1 lastevents | cut -d "|" -f 1`
+if [ x$LAST = x ]; then
+	LAST=0
+fi
+
+LAST=$(($LAST + 1))
+TS=`date +%s`
+# event number|timestamp|type|x|y|z
+echo "$LAST|$TS|$1|$2|$3" >> lastevents

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+cd $1
+TMPFILE=$2
+shift
+shift
+
+echo '<binaryversionlist>' > $TMPFILE
+for x in $@; do
+	grep "name=\"$x.rpm\"" _names >> $TMPFILE
+done
+echo '</binaryversionlist>' >> $TMPFILE

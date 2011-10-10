@@ -1,0 +1,4 @@
+#!/bin/sh
+git --git-dir=$1 update-server-info
+make
+python tools/updatepackage.py $1
