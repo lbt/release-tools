@@ -107,7 +107,7 @@ def get_entries_from_commit(projectpath, packagename, commit):
             if x.attributes["name"].value == packagename:
                 
                 for mappingsdoc in mcache.getElementsByTagName("repo"):
-                 if mappingsdoc.attributes["name"].value == x.attributes["git"].value:
+                 if mappingsdoc.attributes["path"].value == x.attributes["git"].value:
                   for y in mappingsdoc.getElementsByTagName("map"):
                     if y.attributes["commit"].value == commit:
                         entries = {}
