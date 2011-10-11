@@ -349,7 +349,7 @@ def generate_mappings(repos):
                 indexdoc.childNodes[0].appendChild(pkgelement)
                 rev = rev + 1     
         return indexdoc.childNodes[0].toprettyxml()
-                                   
+
 #generate_mappings("Base")        
         
 # Normal package

@@ -21,6 +21,7 @@ import mimetypes
 import urlparse
 import uuid
 import gitmer
+import subprocess
 import xml.dom.minidom
 import os
 try:
@@ -66,6 +67,12 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             for x in doc.getElementsByTagName("mapping"):
                 if x.attributes["project"].value == projectname:
                     return x.attributes["path"].value
+            return None
+        def lookup_binariespath(projectname):
+            doc = xml.dom.minidom.parse("mappings.xml")            
+            for x in doc.getElementsByTagName("mapping"):
+                if x.attributes["project"].value == projectname:
+                    return x.attributes["binaries"].value
             return None
         def string2stream(thestr):
             content = StringIO()
@@ -173,6 +180,57 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 contentz, content = string2stream(contentst)
                 contenttype = "application/octet-stream"
                 contentmtime = time.time()
+        elif path.startswith("/public/build"):
+            pathparts = path.split("/")
+            pathparts = pathparts[1:]
+            print pathparts
+            #/public/build/Mer:Trunk:Base/standard/i586/_repository?view=cache
+            if len(pathparts) >= 3:
+                pathparts[2] = lookup_binariespath(pathparts[2])
+                if pathparts[2] is None:
+                    pathparts[2] = "--UNKNOWNPROJECT"
+            if len(pathparts) == 6 and pathparts[5] == "_repository":
+                # pathparts[2]  == project
+                #          [3]  == repository
+                #          [4]  == scheduler
+                if query.has_key("view") and query["view"][0] == "cache":
+                    contentsize, contentmtime, content = file2stream(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=cache")
+                    contenttype = "application/octet-stream"
+                elif query.has_key("view") and query["view"][0] == "cpio":
+                    binaries = ""
+                    for x in query["binary"]:
+                        binaries = binaries + os.path.basename(x) + ".rpm\n"
+                    cpiooutput = subprocess.Popen(["tools/createcpio", pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4]], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate(binaries)[0]
+#                    cpiooutput = subprocess.Popen(["/usr/bin/curl", "http://192.168.100.213:81/public/build/Core:i586/Core_i586/i586/_repository?" + pathparsed[4]], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate()[0]
+                    contentsize, content = string2stream(cpiooutput)
+                    print contentsize
+                    contentmtime = time.time()
+                    contenttype = "application/x-cpio"
+                    ##
+                elif query.has_key("view") and query["view"][0] == "names":
+                    doc = xml.dom.minidom.parse(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=names")
+                    removables = []
+                    for x in doc.getElementsByTagName("binary"):
+                        if not os.path.splitext(x.attributes["filename"].value)[0] in query["binary"]:
+                            removables.append(x)
+                    for x in removables:
+                        doc.childNodes[0].removeChild(x)
+                    contentsize, content = string2stream(doc.childNodes[0].toxml())
+                    contentmtime = time.time()
+                    contenttype = "text/html"                    
+                    ##
+                elif query.has_key("view") and query["view"][0] == "binaryversions":                   
+                    doc = xml.dom.minidom.parse(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=binaryversions")
+                    removables = []
+                    for x in doc.getElementsByTagName("binary"):
+                        if not os.path.splitext(x.attributes["name"].value)[0] in query["binary"]:
+                            removables.append(x)
+                    for x in removables:
+                        doc.childNodes[0].removeChild(x)
+                    contentsize, content = string2stream(doc.childNodes[0].toxml())
+                    contentmtime = time.time()
+                    contenttype = "text/html"                    
+                
         if content is None:
               print "404: path"
               self.send_error(404, "File not found")
