@@ -10,7 +10,7 @@ __version__ = "0.6"
 
 __all__ = ["SimpleHTTPRequestHandler"]
 
-import os
+import os, sys
 import posixpath
 import BaseHTTPServer
 import urllib
@@ -24,6 +24,8 @@ import gitmer
 import subprocess
 import xml.dom.minidom
 import os
+import traceback
+
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -35,12 +37,13 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_GET(self):
         """Serve a GET request."""
         f = None
-#        try:
-        f = self.send_head()
-#        except: 
-#            self.send_response(500)
-#            print "500: " + self.path
-#            self.end_headers()
+        try:
+            f = self.send_head()
+        except: 
+            self.send_response(500)
+            print "500: " + self.path
+            traceback.print_exc(file=sys.stdout)
+            self.end_headers()
         if f:
             self.copyfile(f, self.wfile)
             if hasattr(f, "close"):
@@ -199,7 +202,12 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 elif query.has_key("view") and query["view"][0] == "cpio":
                     binaries = ""
                     for x in query["binary"]:
+                        if os.path.isfile(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/" + os.path.basename(x) + ".rpm"):
+                            assert "" + pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/" + os.path.basename(x) + ".rpm was not found"
                         binaries = binaries + os.path.basename(x) + ".rpm\n"
+                    
+                    print binaries
+
                     cpiooutput = subprocess.Popen(["tools/createcpio", pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4]], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate(binaries)[0]
 #                    cpiooutput = subprocess.Popen(["/usr/bin/curl", "http://192.168.100.213:81/public/build/Core:i586/Core_i586/i586/_repository?" + pathparsed[4]], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate()[0]
                     contentsize, content = string2stream(cpiooutput)
