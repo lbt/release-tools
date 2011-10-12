@@ -197,8 +197,12 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 #          [3]  == repository
                 #          [4]  == scheduler
                 if query.has_key("view") and query["view"][0] == "cache":
-                    contentsize, contentmtime, content = file2stream(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=cache")
-                    contenttype = "application/octet-stream"
+                    if os.path.isfile(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=cache"):
+                        contentsize, contentmtime, content = file2stream(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=cache")
+                        contenttype = "application/octet-stream"
+                    else:
+                        contentsize, contentmtime, content = file2stream("tools/emptyrepositorycache.cpio")
+                        contenttype = "application/octet-stream"
                 elif query.has_key("view") and query["view"][0] == "cpio":
                     binaries = ""
                     for x in query["binary"]:
@@ -216,28 +220,38 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     contenttype = "application/x-cpio"
                     ##
                 elif query.has_key("view") and query["view"][0] == "names":
-                    doc = xml.dom.minidom.parse(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=names")
-                    removables = []
-                    for x in doc.getElementsByTagName("binary"):
-                        if not os.path.splitext(x.attributes["filename"].value)[0] in query["binary"]:
-                            removables.append(x)
-                    for x in removables:
-                        doc.childNodes[0].removeChild(x)
-                    contentsize, content = string2stream(doc.childNodes[0].toxml())
-                    contentmtime = time.time()
-                    contenttype = "text/html"                    
+                    if os.path.isfile(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=names"):
+                        doc = xml.dom.minidom.parse(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=names")
+                        removables = []
+                        for x in doc.getElementsByTagName("binary"):
+                            if not os.path.splitext(x.attributes["filename"].value)[0] in query["binary"]:
+                                removables.append(x)
+                        for x in removables:
+                            doc.childNodes[0].removeChild(x)
+                        contentsize, content = string2stream(doc.childNodes[0].toxml())
+                        contentmtime = time.time()
+                        contenttype = "text/html"                    
+                    else:
+                        contentsize, content = string2stream("<binarylist />")
+                        contenttype = "text/html"
+                        contentmtime = time.time()
                     ##
                 elif query.has_key("view") and query["view"][0] == "binaryversions":                   
-                    doc = xml.dom.minidom.parse(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=binaryversions")
-                    removables = []
-                    for x in doc.getElementsByTagName("binary"):
-                        if not os.path.splitext(x.attributes["name"].value)[0] in query["binary"]:
-                            removables.append(x)
-                    for x in removables:
-                        doc.childNodes[0].removeChild(x)
-                    contentsize, content = string2stream(doc.childNodes[0].toxml())
-                    contentmtime = time.time()
-                    contenttype = "text/html"                    
+                    if os.path.isfile(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=cache"):
+                        doc = xml.dom.minidom.parse(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=binaryversions")
+                        removables = []
+                        for x in doc.getElementsByTagName("binary"):
+                            if not os.path.splitext(x.attributes["name"].value)[0] in query["binary"]:
+                                removables.append(x)
+                        for x in removables:
+                            doc.childNodes[0].removeChild(x)
+                        contentsize, content = string2stream(doc.childNodes[0].toxml())
+                        contentmtime = time.time()
+                        contenttype = "text/html"                    
+                    else:
+                        contentsize, content = string2stream("<binaryversionlist />")
+                        contenttype = "text/html"
+                        contentmtime = time.time()
                 
         if content is None:
               print "404: path"
