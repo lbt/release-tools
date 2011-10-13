@@ -1,6 +1,6 @@
 <mappings>
 	<mapping project="Core" path="obs-projects/Core" />
 	<mapping project="Core:i586" path="obs-projects/Core/i586" binaries="obs-repos/Core:i586" />
-	<mapping project="Core:armv7l" path="obs-projects/Core/armv7l" />
-	<mapping project="Core:armv7hl" path="obs-projects/Core/armv7hl" />
+	<mapping project="Core:armv7l" path="obs-projects/Core/armv7l" binaries="obs-repos/Core:armv7l" />
+	<mapping project="Core:armv7hl" path="obs-projects/Core/armv7hl" binaries="obs-repos/Core:armv7hl" />
 </mappings>
