@@ -3,4 +3,5 @@
 	<mapping project="Core:i586" path="obs-projects/Core/i586" binaries="obs-repos/Core:i586:latest" />
 	<mapping project="Core:armv7l" path="obs-projects/Core/armv7l" binaries="obs-repos/Core:armv7l:latest" />
 	<mapping project="Core:armv7hl" path="obs-projects/Core/armv7hl" binaries="obs-repos/Core:armv7hl:latest" />
+	<mapping project="Core:armv6l" path="obs-projects/Core/armv6l" binaries="obs-repos/Core:armv6l:latest" />
 </mappings>
