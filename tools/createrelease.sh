@@ -44,4 +44,7 @@ grab_build Core:/i586/Core_i586 i586
 grab_build Core:/armv7l/Core_armv7l armv7l
 grab_build Core:/armv7hl/Core_armv7hl armv7hl
 
+rsync -aHx --progress obs-repos/Core\:*\:$RELEASE obs-repos/Core\:*\:latest merreleases@monster.tspre.org:~/public_html/obs-repos/
+rsync -aHx --progress releases/$RELEASE merreleases@monster.tspre.org:~/public_html/releases/
+
 exit 0
