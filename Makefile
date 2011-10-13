@@ -1,12 +1,17 @@
 PLEASEMAKE=packages-git/mappingscache.xml lastevents obs-projects/Core
 
-
 all: $(PLEASEMAKE)
 
-obs-projects/Core:
-	git clone obs-projects/Core.git obs-projects/Core
+updatepackages:
+	rsync -aHx --verbose --exclude=repos.lst --exclude=mappingscache.xml --exclude=.keep --delete-after rsync://monster.tspre.org/mer-releases/packages-git/ packages-git
 
-packages-git/repos.lst::
+updatecore:
+	cd obs-projects/Core; git pull
+
+obs-projects/Core:
+	git clone git://gitorious.org/merproject/project-core.git obs-projects/Core
+
+packages-git/repos.lst:: updatepackages
 	find packages-git/mer-core packages-git/mer-crosshelpers -mindepth 1 -maxdepth 1 -type d -printf "%p\n" | sort > packages-git/repos.lst
 
 packages-git/mappingscache.xml: packages-git/repos.lst
