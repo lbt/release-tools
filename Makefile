@@ -1,11 +1,6 @@
 PLEASEMAKE=packages-git/mappingscache.xml lastevents obs-projects/Core
-GIT_PROTOCOL:=git
 
-ifeq ($(GIT_PROTOCOL),git)
-GIT_URL=git://gitorious.org/merproject/project-core.git
-else
-GIT_URL=https://git.gitorious.org/merproject/project-core.git
-endif
+GIT_URL=http://monster.tspre.org:8080/p/mer/project-core
 
 all: $(PLEASEMAKE)
 
