@@ -31,3 +31,5 @@ lastevents:
 
 clean:
 	rm -f $(PLEASEMAKE)
+
+test:
