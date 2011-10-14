@@ -12,6 +12,7 @@ __all__ = ["SimpleHTTPRequestHandler"]
 
 import os, sys
 import posixpath
+import SocketServer
 import BaseHTTPServer
 import urllib
 import cgi
@@ -280,11 +281,12 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         """
         shutil.copyfileobj(source, outputfile)
-            
-def test(HandlerClass = SimpleHTTPRequestHandler,
-         ServerClass = BaseHTTPServer.HTTPServer):
-    BaseHTTPServer.test(HandlerClass, ServerClass)
 
+class XFSPWebServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
+        pass
 
-if __name__ == '__main__':
-    test()
+PORT = int(sys.argv[1])
+
+httpd = XFSPWebServer(("0.0.0.0", PORT), SimpleHTTPRequestHandler)
+httpd.serve_forever()
+
