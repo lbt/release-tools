@@ -1,3 +1,4 @@
+from threading import Thread, Lock
 import git
 import hashlib
 import csv, os
@@ -10,7 +11,32 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-mcache = xml.dom.minidom.parse("packages-git/mappingscache.xml")
+myLock = Lock()
+
+def synchronized(lock):
+    """ Synchronization decorator. """
+
+    def wrap(f):
+        def newFunction(*args, **kw):
+            lock.acquire()
+            try:
+                return f(*args, **kw)
+            finally:
+                lock.release()
+        return newFunction
+    return wrap
+
+@synchronized(myLock)
+def get_mappingscache():
+     if not hasattr(get_mappingscache, "mcache"):
+        get_mappingscache.mcache = xml.dom.minidom.parse("packages-git/mappingscache.xml")
+        get_mappingscache.mcachetime = os.stat("packages-git/mappingscache.xml").st_mtime
+     stat = os.stat("packages-git/mappingscache.xml")
+     if get_mappingscache.mcachetime != stat.st_mtime:
+         print "mappings cache was updated, reloading.."
+         get_mappingscache.mcache = xml.dom.minidom.parse("packages-git/mappingscache.xml")
+         get_mappingscache.mcachetime = os.stat("packages-git/mappingscache.xml").st_mtime   
+     return get_mappingscache.mcache
 
 #def get_mappingscache(filename):
 #    if mcache.has_key(filename):
@@ -52,7 +78,7 @@ def get_package_tree_from_commit_or_rev(projectpath, packagename, commit):
         for x in packagesdoc.getElementsByTagName("package"):
             if x.attributes["name"].value == packagename:
                 followbranch = x.attributes["followbranch"].value
-                for mappingsdoc in mcache.getElementsByTagName("repo"):
+                for mappingsdoc in get_mappingscache().getElementsByTagName("repo"):
                  if mappingsdoc.attributes["path"].value == x.attributes["git"].value:
                    for y in mappingsdoc.getElementsByTagName("map"):
                     if y.attributes["branch"].value != followbranch:
@@ -106,7 +132,7 @@ def get_entries_from_commit(projectpath, packagename, commit):
         for x in packagesdoc.getElementsByTagName("package"):
             if x.attributes["name"].value == packagename:
                 
-                for mappingsdoc in mcache.getElementsByTagName("repo"):
+                for mappingsdoc in get_mappingscache().getElementsByTagName("repo"):
                  if mappingsdoc.attributes["path"].value == x.attributes["git"].value:
                   for y in mappingsdoc.getElementsByTagName("map"):
                     if y.attributes["commit"].value == commit:

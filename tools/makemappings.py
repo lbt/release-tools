@@ -8,6 +8,8 @@ for x in f.readlines():
     repos.append(x)
 f.close()
 
+mappings = gitmer.generate_mappings(repos)
 f = open(sys.argv[2], "w+")
-f.write(gitmer.generate_mappings(repos))
+
+f.write(mappings)
 f.close()
