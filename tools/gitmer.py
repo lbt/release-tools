@@ -181,15 +181,16 @@ def get_package_file_supportlink(projectpath, packagename, filename, getrev, exp
         return get_package_file(projectpath, packagename, filename, getrev=getrev)    
 
 
-def update_package_xml(projectpath, packagename):
-        packagesdoc = xml.dom.minidom.parse(projectpath + "/packages.xml")            
+def update_package_xml(packagesfile):
+        packagesdoc = xml.dom.minidom.parse(packagesfile)            
         for x in packagesdoc.getElementsByTagName("package"):
-            if x.attributes["name"].value == packagename:
-                repo = git.Repo(x.attributes["git"].value, odbt=git.GitDB)
-                newestcommitonbranch = repo.commit(x.attributes["followbranch"].value).hexsha
-                x.setAttribute("commit", newestcommitonbranch)
+           repo = git.Repo(x.attributes["git"].value, odbt=git.GitDB)
+           newestcommitonbranch = repo.commit(x.attributes["followbranch"].value).hexsha
+           if newestcommitonbranch != x.attributes["commit"].value:
+            print "updating package " + x.attributes["name"].value + " git " + x.attributes["git"].value
+           x.setAttribute("commit", newestcommitonbranch)
         newxml = packagesdoc.toxml(encoding="us-ascii")
-        f = open(projectpath + "/packages.xml", "wb")
+        f = open(packagesfile, "wb")
         f.write(newxml)
         f.close()                        
         
