@@ -6,13 +6,13 @@ API=$3
 mkdir -p gitrepos/$PACKAGE
 cd gitrepos/$PACKAGE
 git init .
-wget -nd -nH -cr $API/source/$REPO/$PACKAGE/_meta $API/source/$REPO/$PACKAGE/_attribute $API/source/$REPO/$PACKAGE/ 
+wget --no-check-certificate -nd -nH -cr $API/source/$REPO/$PACKAGE/_meta $API/source/$REPO/$PACKAGE/_attribute $API/source/$REPO/$PACKAGE/ 
 #$API/source/$REPO/$x?expand=1
 mv index.html _index
 python $ORIG/tools/downloadfiles.py _index $API $REPO | sh
 rm -f _index
 git add .
-git commit -m "Initial import"
+git commit -s -m "Initial import"
 cd ..
 mv $PACKAGE $PACKAGE-import
 git clone --mirror -n $PACKAGE-import $PACKAGE

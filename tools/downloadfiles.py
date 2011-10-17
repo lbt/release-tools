@@ -11,6 +11,6 @@ for x in doc1.getElementsByTagName("directory"):
 
 for x in doc1.getElementsByTagName("entry"):
 	tuple = (x.attributes["name"].value, x.attributes["md5"].value, x.attributes["size"].value, x.attributes["mtime"].value)
-	print 'wget -nd -nH -cr "%s/source/%s/%s/%s"' % (sys.argv[2], sys.argv[3], pkg, tuple[0])
+	print 'wget --no-check-certificate -nd -nH -cr "%s/source/%s/%s/%s"' % (sys.argv[2], sys.argv[3], pkg, tuple[0])
 		
 		
