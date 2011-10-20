@@ -8,4 +8,5 @@ fi
 LAST=$(($LAST + 1))
 TS=`date +%s`
 # event number|timestamp|type|x|y|z
-echo "$LAST|$TS|$1|$2|$3" >> lastevents
+#                        type project repository arch
+echo "$LAST|$TS|$1|$2|$3|$4" >> lastevents

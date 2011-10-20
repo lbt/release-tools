@@ -260,7 +260,21 @@ def get_events_filtered(start, filters):
                     packageelm = indexdoc.createElement("package")
                     packagetext = indexdoc.createTextNode(row[4])
                     packageelm.appendChild(packagetext)
-                    eventelm.appendChild(packageelm)                
+                    eventelm.appendChild(packageelm)  
+                if row[2] == "repository":
+                    prjelm = indexdoc.createElement("project")
+                    prjtext = indexdoc.createTextNode(row[3])
+                    prjelm.appendChild(prjtext)            
+                    eventelm.appendChild(prjelm)
+                    repelm = indexdoc.createElement("repository")
+                    reptext = indexdoc.createTextNode(row[4])
+                    repelm.appendChild(reptext)
+                    eventelm.appendChild(repelm)  
+                    archelm = indexdoc.createElement("arch")
+                    archtext = indexdoc.createTextNode(row[5])
+                    archelm.appendChild(archtext)
+                    eventelm.appendChild(archelm)  
+                                  
                 indexdoc.childNodes[0].appendChild(eventelm)                
         f.close()
 #  XXX add support for project events and repository events
