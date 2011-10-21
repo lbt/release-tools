@@ -1,16 +1,16 @@
 PLEASEMAKE=packages-git/mappingscache.xml lastevents obs-projects/Core
 
-GIT_URL=http://monster.tspre.org:8080/p/mer/project-core
+GIT_URL=http://review.merproject.org/p/mer/project-core
 
 all: $(PLEASEMAKE)
 
 fetchlatestrepo:
-	rsync -aHx --verbose rsync://monster.tspre.org/mer-releases/obs-repos/latest.release obs-repos/latest.release
-	rsync -aHx --verbose rsync://monster.tspre.org/mer-releases/obs-repos/Core:*:`cat obs-repos/latest.release` obs-repos
-	rsync -aHx --verbose rsync://monster.tspre.org/mer-releases/obs-repos/Core:*:latest obs-repos
+	rsync -aHx --verbose rsync://releases.merproject.org/mer-releases/obs-repos/latest.release obs-repos/latest.release
+	rsync -aHx --verbose rsync://releases.merproject.org/mer-releases/obs-repos/Core:*:`cat obs-repos/latest.release` obs-repos
+	rsync -aHx --verbose rsync://releases.merproject.org/mer-releases/obs-repos/Core:*:latest obs-repos
 
 updatepackages:
-	rsync -aHx --verbose --exclude=repos.lst --exclude=mappingscache.xml --exclude=.keep --delete-after rsync://monster.tspre.org/mer-releases/packages-git/ packages-git
+	rsync -aHx --verbose --exclude=repos.lst --exclude=mappingscache.xml --exclude=.keep --delete-after rsync://releases.merproject.org/mer-releases/packages-git/ packages-git
 
 updatecore:
 	cd obs-projects/Core; git pull
