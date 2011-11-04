@@ -329,13 +329,22 @@ def get_package_file(realproject, projectpath, packagename, filename, getrev):
         impl = getDOMImplementation()
         indexdoc = impl.createDocument(None, "directory", None)
         indexdoc.childNodes[0].setAttribute("name", packagename)
-        commit, rev, srcmd5, tree, git = get_package_tree_from_commit_or_rev(projectpath, packagename, getrev)
         ifdisable = get_if_disable(projectpath, packagename)
+        # Make fake _meta file
+        if filename == "_meta":
+           fakemeta = """<package project="%s" name="%s">
+  <title>%s</title>
+  <description>Description
+
+
+</description>
+  <url>http://www.merproject.org</url>
+</package>
+""" % (realproject, packagename, packagename)
+           return file_fix_meta(realproject, packagename, fakemeta, ifdisable)
+        commit, rev, srcmd5, tree, git = get_package_tree_from_commit_or_rev(projectpath, packagename, getrev)
         for entry in tree:
             if entry.name == filename:
-              if filename == "_meta":
-               return file_fix_meta(realproject, packagename, git_cat(git, entry.hexsha), ifdisable)
-              else:
                return entry.size, git_cat(git, entry.hexsha)
         return None
 
