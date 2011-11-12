@@ -162,6 +162,8 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     contentsize, content = string2stream(gitmer.adjust_meta(pathparts[2], realproject))
                     contenttype = "text/xml"
                     contentmtime = time.time()
+                elif pathparts[3] == "_pubkey":
+                    content = None # 404 it
                 else:
                     expand = 0
                     rev = None

@@ -33,6 +33,7 @@ grab_build()
 	mkdir -p packages debug
 	cd packages
 	rsync  -aHx --progress $RSYNC/$SYNCPATH/* --exclude=*.src.rpm --exclude=repocache/ --exclude=*.repo --exclude=repodata/ --exclude=src/ --include=*.rpm .
+	find -name \*.rpm | xargs -L1 rpm --delsign
 	mv */*-debuginfo-* ../debug
 	mv */*-debugsource-* ../debug
 	# Apply package groups and create repository
@@ -54,10 +55,12 @@ grab_build Core:/armv6l/Core_armv6l armv6l
 if [ x$NORSYNC = x1 ]; then
  exit 0
 fi
-echo $RELEASE > obs-repos/latest-release
+echo $RELEASE > obs-repos/latest.release
 echo $RELEASE > releases/latest-release
+ln -s $RELEASE releases/latest
 rsync -aHx --progress obs-repos/Core\:*\:$RELEASE obs-repos/latest.release obs-repos/Core\:*\:latest merreleases@monster.tspre.org:~/public_html/obs-repos/
 rsync -aHx --progress obs-repos/latest.release obs-repos/Core\:*\:latest merreleases@monster.tspre.org:~/public_html/obs-repos/
 rsync -aHx --progress releases/$RELEASE merreleases@monster.tspre.org:~/public_html/releases/
-rsync -aHx --progress releases/latest-release merreleases@monster.tspre.org:~/public_html/releases/
+rsync -aHx --progress releases/latest-release releases/latest merreleases@monster.tspre.org:~/public_html/releases/
+
 exit 0

@@ -213,7 +213,10 @@ def update_package_xml(packagesfile):
            repo = git.Repo(x.attributes["git"].value, odbt=git.GitDB)
            newestcommitonbranch = repo.commit(x.attributes["followbranch"].value).hexsha
            if newestcommitonbranch != x.attributes["commit"].value:
-            print "updating package " + x.attributes["name"].value + " git " + x.attributes["git"].value
+            print "Package " + x.attributes["name"].value + " changed from " + x.attributes["commit"].value + " to " + newestcommitonbranch + "in git " + x.attributes["git"].value + ":"
+            print ""
+            print repo.git.log(x.attributes["commit"].value + ".." + newestcommitonbranch)
+            print ""
            x.setAttribute("commit", newestcommitonbranch)
         newxml = packagesdoc.toxml(encoding="us-ascii")
         f = open(packagesfile, "wb")
