@@ -206,6 +206,13 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     else:
                         contentsize, contentmtime, content = file2stream("tools/emptyrepositorycache.cpio")
                         contenttype = "application/octet-stream"
+                elif query.has_key("view") and query["view"][0] == "solvstate":
+                    if os.path.isfile(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=solvstate"):
+                        contentsize, contentmtime, content = file2stream(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=solvstate")
+                        contenttype = "application/octet-stream"
+                    else:
+                        contentsize, contentmtime, content = file2stream("tools/emptyrepositorycache.cpio")
+                        contenttype = "application/octet-stream"
                 elif query.has_key("view") and query["view"][0] == "cpio":
                     binaries = ""
                     for x in query["binary"]:
