@@ -57,6 +57,7 @@ if [ x$NORSYNC = x1 ]; then
 fi
 echo $RELEASE > obs-repos/latest.release
 echo $RELEASE > releases/latest-release
+rm releases/latest
 ln -s $RELEASE releases/latest
 rsync -aHx --progress obs-repos/Core\:*\:$RELEASE obs-repos/latest.release obs-repos/Core\:*\:latest merreleases@monster.tspre.org:~/public_html/obs-repos/
 rsync -aHx --progress obs-repos/latest.release obs-repos/Core\:*\:latest merreleases@monster.tspre.org:~/public_html/obs-repos/
