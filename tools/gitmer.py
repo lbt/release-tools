@@ -85,7 +85,7 @@ def get_package_tree_from_commit_or_rev(projectpath, packagename, commit):
                         continue
                     if y.attributes["commit"].value == commit or y.attributes["srcmd5"].value == commit or y.attributes["rev"].value == commit:
                             repo = git.Repo(x.attributes["git"].value, odbt=git.GitDB)
-                            return y.attributes["commit"].value, y.attributes["rev"].value, y.attributes["srcmd5"].value, repo.tree(x.attributes["commit"].value), x.attributes["git"].value
+                            return y.attributes["commit"].value, y.attributes["rev"].value, y.attributes["srcmd5"].value, repo.tree(y.attributes["commit"].value), x.attributes["git"].value
         for x in packagesdoc.getElementsByTagName("link"):
             if x.attributes["to"].value == packagename:
                 return get_package_tree_from_commit_or_rev(projectpath, x.attributes["from"].value, commit)
