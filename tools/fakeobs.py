@@ -164,6 +164,8 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     contentmtime = time.time()
                 elif pathparts[3] == "_pubkey":
                     content = None # 404 it
+                elif pathparts[3] == "_pattern":
+                    content = None # 404 it
                 else:
                     expand = 0
                     rev = None
