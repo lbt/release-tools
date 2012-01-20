@@ -10,11 +10,14 @@ if [ x$1 = x -o x$2 = x -o x$3 = x ]; then
 	exit 0
 fi
 
+if [ x$RESYNC = x ]; then
 $TOOLS/dumpbuild "$API" "Core:i586" Core:i586:$RELEASE Core_i586 "i586"
 $TOOLS/dumpbuild "$API" "Core:i486" Core:i486:$RELEASE Core_i486 "i586"
 $TOOLS/dumpbuild "$API" "Core:armv7l" Core:armv7l:$RELEASE Core_armv7l "i586 armv7el"
 $TOOLS/dumpbuild "$API" "Core:armv7hl" Core:armv7hl:$RELEASE Core_armv7hl "i586 armv8el"
 $TOOLS/dumpbuild "$API" "Core:armv6l" Core:armv6l:$RELEASE Core_armv6l "i586 armv7el"
+fi
+if [ x$PRERELEASE = x ]; then
 
 rm -f obs-repos/Core:i586:latest obs-repos/Core:i486:latest obs-repos/Core:armv7l:latest obs-repos/Core:armv7hl:latest obs-repos/Core:armv6l:latest 
 ln -s Core:i586:$RELEASE obs-repos/Core:i586:latest
@@ -23,7 +26,7 @@ ln -s Core:armv7l:$RELEASE obs-repos/Core:armv7l:latest
 ln -s Core:armv7hl:$RELEASE obs-repos/Core:armv7hl:latest
 ln -s Core:armv6l:$RELEASE obs-repos/Core:armv6l:latest
 
-
+fi
 grab_build()
 {
 	SYNCPATH=$1
@@ -37,28 +40,30 @@ grab_build()
 	mv */*-debuginfo-* ../debug
 	mv */*-debugsource-* ../debug
 	# Apply package groups and create repository
-	rpm2cpio ./*/package-groups-*.rpm | cpio -idv
-	createrepo -g ./usr/share/package-groups/group.xml .
-	rm -rf ./usr
+	createrepo -g $ORIG/obs-projects/Core/$NAME/group.xml .
 	# No need for package groups in debug symbolsA
 	cd ../debug
 	createrepo .
 	cd $ORIG
 }
 
+if [ x$RESYNC = x -a x$NO_GRAB = x ]; then
 grab_build Core:/i586/Core_i586 i586 
 grab_build Core:/i486/Core_i486 i486 
 grab_build Core:/armv7l/Core_armv7l armv7l
 grab_build Core:/armv7hl/Core_armv7hl armv7hl
 grab_build Core:/armv6l/Core_armv6l armv6l
+fi
 
 if [ x$NORSYNC = x1 ]; then
  exit 0
 fi
-echo $RELEASE > obs-repos/latest.release
-echo $RELEASE > releases/latest-release
-rm releases/latest
-ln -s $RELEASE releases/latest
+if [ x$PRERELEASE = x ]; then
+	echo $RELEASE > obs-repos/latest.release
+	echo $RELEASE > releases/latest-release
+	rm releases/latest
+	ln -s $RELEASE releases/latest
+fi
 rsync -aHx --progress obs-repos/Core\:*\:$RELEASE obs-repos/latest.release obs-repos/Core\:*\:latest merreleases@monster.tspre.org:~/public_html/obs-repos/
 rsync -aHx --progress obs-repos/latest.release obs-repos/Core\:*\:latest merreleases@monster.tspre.org:~/public_html/obs-repos/
 rsync -aHx --progress releases/$RELEASE merreleases@monster.tspre.org:~/public_html/releases/
