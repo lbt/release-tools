@@ -5,4 +5,5 @@
 	<mapping project="Core:armv7l" path="obs-projects/Core/armv7l" binaries="obs-repos/Core:armv7l:latest" reponame="Core_armv7l" />
 	<mapping project="Core:armv7hl" path="obs-projects/Core/armv7hl" binaries="obs-repos/Core:armv7hl:latest" reponame="Core_armv7hl" />
 	<mapping project="Core:armv6l" path="obs-projects/Core/armv6l" binaries="obs-repos/Core:armv6l:latest" reponame="Core_armv6l" />
+	<mapping project="Core:mipsel" path="obs-projects/Core/mipsel" binaries="obs-repos/Core:mipsel:latest" reponame="Core_mipsel" />
 </mappings>
