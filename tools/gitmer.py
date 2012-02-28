@@ -283,7 +283,11 @@ def get_events_filtered(start, filters):
                     archtext = indexdoc.createTextNode(row[5])
                     archelm.appendChild(archtext)
                     eventelm.appendChild(archelm)  
-                                  
+                if row[2] == "project":
+                    prjelm = indexdoc.createElement("project")
+                    prjtext = indexdoc.createTextNode(row[3])
+                   prjelm.appendChild(prjtext)
+                   eventelm.appendChild(prjelm)
                 indexdoc.childNodes[0].appendChild(eventelm)                
         f.close()
 #  XXX add support for project events and repository events
