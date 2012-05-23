@@ -1,10 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 ORIG=$PWD
 API=$1
 OBSPROJECT=$2
 OUTDIR=$3
 REPONAME=$4
 SCHEDULERS="$5"
+[[ -d obs-repos/$OUTDIR ]] && {
+    echo "obs-repos/$OUTDIR exists already. Looks like you already fetched this release from OBS"
+    echo 'remove the obs-repos/*$RELEASE directories manually if you need to re-fetch'
+    exit 1
+}
 mkdir -p obs-repos/$OUTDIR/$REPONAME
 cd obs-repos/$OUTDIR/$REPONAME
 for scheduler in $SCHEDULERS; do
