@@ -28,41 +28,6 @@ RSYNC=$3
 # Set NORSYNC to skip the push to public servers
 # Set NOGRAB to skip the restructuring into the releases/ area
 
-if [ x$1 = x -o x$2 = x -o x$3 = x ]; then
-    echo Syntax: tools/createrelease.sh RELEASE OBSAPI RSYNCURL
-    exit 0
-fi
-
-# List of project repo schedulers(: sep) to release
-PROJECTS="
-Core:i586 Core_i586 i586
-Core:i486 Core_i486 i586
-Core:armv7l Core_armv7l i586:armv7el
-Core:armv7hl Core_armv7hl i586:armv8el
-Core:armv6l Core_armv6l i586:armv7el
-Core:mipsel Core_mipsel i586:mips
-"
-
-if [ x$RESYNC = x -a x$SKIPWGET = x ]; then
-    # If a dumpbuild fails, abort
-    while read project repo scheds ; do
-	echo "Process $project with repo $repo for $scheds"
-	set -e
-	$TOOLS/dumpbuild "$API" "$project" ${project}:$RELEASE $repo $scheds
-	set +e
-    done <<< $PROJECTS
-fi
-
-while read project repo scheds ; do
-    if [ x$PRERELEASE = x ]; then
-	rm -f obs-repos/${project}:latest
-	ln -s ${project}:$RELEASE obs-repos/${project}:latest
-    else
-	rm -f obs-repos/${project}:next
-	ln -s ${project}:$RELEASE obs-repos/${project}:next
-    fi
-done <<< $PROJECTS
-
 grab_build()
 {
     SYNCPATH=$1
@@ -99,6 +64,44 @@ grab_build()
     rmdir --ignore-fail-on-non-empty *
     cd $ORIG
 }
+
+################
+
+if [ x$1 = x -o x$2 = x -o x$3 = x ]; then
+    echo Syntax: tools/createrelease.sh RELEASE OBSAPI RSYNCURL
+    exit 0
+fi
+
+# List of project repo schedulers(: sep) to release
+PROJECTS="
+Core:i586 Core_i586 i586
+Core:i486 Core_i486 i586
+Core:armv7l Core_armv7l i586:armv7el
+Core:armv7hl Core_armv7hl i586:armv8el
+Core:armv6l Core_armv6l i586:armv7el
+Core:mipsel Core_mipsel i586:mips
+"
+
+if [ x$RESYNC = x -a x$SKIPWGET = x ]; then
+    # If a dumpbuild fails, abort
+    while read project repo scheds ; do
+	echo "Process $project with repo $repo for $scheds"
+	set -e
+	$TOOLS/dumpbuild "$API" "$project" ${project}:$RELEASE $repo $scheds
+	set +e
+    done <<< $PROJECTS
+fi
+
+while read project repo scheds ; do
+    if [ x$PRERELEASE = x ]; then
+	rm -f obs-repos/${project}:latest
+	ln -s ${project}:$RELEASE obs-repos/${project}:latest
+    else
+	rm -f obs-repos/${project}:next
+	ln -s ${project}:$RELEASE obs-repos/${project}:next
+    fi
+done <<< $PROJECTS
+
 
 if [ x$RESYNC = x -a x$NO_GRAB = x ]; then
     grab_build Core:/i586/Core_i586 i586
