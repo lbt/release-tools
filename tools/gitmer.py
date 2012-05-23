@@ -206,6 +206,40 @@ def get_package_index(projectpath, packagename, getrev=None):
 def get_package_file_supportlink(projectpath, packagename, filename, getrev, expand):
         return get_package_file(projectpath, packagename, filename, getrev=getrev)    
 
+def changelog(packagesold, packagesnew):
+        packagesdocold = xml.dom.minidom.parse(packagesold)
+        packagesdocnew = xml.dom.minidom.parse(packagesnew)
+        for x in packagesdocold.getElementsByTagName("package"):
+           found = False
+           for y in packagesdocnew.getElementsByTagName("package"):
+              if x.attributes["name"].value == y.attributes["name"].value:
+                 if x.attributes["commit"].value == y.attributes["commit"].value:
+                    found = True
+                    continue
+                 repo = git.Repo(x.attributes["git"].value, odbt=git.GitDB)
+
+                 print ""
+                 print "Package " + x.attributes["name"].value + " changed from " + x.attributes["commit"].value + " to " + y.attributes["commit"].value + " in git " + x.attributes["git"].value + ":"
+                 print ""
+                 print repo.git.log(x.attributes["commit"].value + ".." + y.attributes["commit"].value)
+                 found = True
+                 break
+           if not found:
+              print ""
+              print "Package " + x.attributes["name"].value + " was removed"
+              print ""
+        for x in packagesdocnew.getElementsByTagName("package"):
+            found = False
+            for y in packagesdocold.getElementsByTagName("package"):
+                if x.attributes["name"].value == y.attributes["name"].value:
+                    found = True
+                    break
+            if not found:
+                repo = git.Repo(x.attributes["git"].value, odbt=git.GitDB)
+                print ""
+                print "Package " + x.attributes["name"].value + " was added"
+                print ""
+                print repo.git.log(x.attributes["commit"].value)
 
 def update_package_xml(packagesfile, package=None):
         packagesdoc = xml.dom.minidom.parse(packagesfile)            
