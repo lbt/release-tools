@@ -33,35 +33,35 @@ if [ x$1 = x -o x$2 = x -o x$3 = x ]; then
     exit 0
 fi
 
+# List of project repo schedulers(: sep) to release
+PROJECTS="
+Core:i586 Core_i586 i586
+Core:i486 Core_i486 i586
+Core:armv7l Core_armv7l i586:armv7el
+Core:armv7hl Core_armv7hl i586:armv8el
+Core:armv6l Core_armv6l i586:armv7el
+Core:mipsel Core_mipsel i586:mips
+"
+
 if [ x$RESYNC = x -a x$SKIPWGET = x ]; then
     # If a dumpbuild fails, abort
-    set -e
-    $TOOLS/dumpbuild "$API" "Core:i586" Core:i586:$RELEASE Core_i586 "i586"
-    $TOOLS/dumpbuild "$API" "Core:i486" Core:i486:$RELEASE Core_i486 "i586"
-    $TOOLS/dumpbuild "$API" "Core:armv7l" Core:armv7l:$RELEASE Core_armv7l "i586 armv7el"
-    $TOOLS/dumpbuild "$API" "Core:armv7hl" Core:armv7hl:$RELEASE Core_armv7hl "i586 armv8el"
-    $TOOLS/dumpbuild "$API" "Core:armv6l" Core:armv6l:$RELEASE Core_armv6l "i586 armv7el"
-    $TOOLS/dumpbuild "$API" "Core:mipsel" Core:mipsel:$RELEASE Core_mipsel "i586 mips"
-    set +e
+    while read project repo scheds ; do
+	echo "Process $project with repo $repo for $scheds"
+	set -e
+	$TOOLS/dumpbuild "$API" "$project" ${project}:$RELEASE $repo $scheds
+	set +e
+    done <<< $PROJECTS
 fi
-if [ x$PRERELEASE = x ]; then
 
-    rm -f obs-repos/Core:i586:latest obs-repos/Core:i486:latest obs-repos/Core:armv7l:latest obs-repos/Core:armv7hl:latest obs-repos/Core:armv6l:latest obs-repos/Core:mipsel:latest 
-    ln -s Core:i586:$RELEASE obs-repos/Core:i586:latest
-    ln -s Core:i486:$RELEASE obs-repos/Core:i486:latest
-    ln -s Core:armv7l:$RELEASE obs-repos/Core:armv7l:latest
-    ln -s Core:armv7hl:$RELEASE obs-repos/Core:armv7hl:latest
-    ln -s Core:armv6l:$RELEASE obs-repos/Core:armv6l:latest
-    ln -s Core:mipsel:$RELEASE obs-repos/Core:mipsel:latest
-else
-    rm -f obs-repos/Core:i586:next obs-repos/Core:i486:next obs-repos/Core:armv7l:next obs-repos/Core:armv7hl:next obs-repos/Core:armv6l:next obs-repos/Core:mipsel:next 
-    ln -s Core:i586:$RELEASE obs-repos/Core:i586:next
-    ln -s Core:i486:$RELEASE obs-repos/Core:i486:next
-    ln -s Core:armv7l:$RELEASE obs-repos/Core:armv7l:next
-    ln -s Core:armv7hl:$RELEASE obs-repos/Core:armv7hl:next
-    ln -s Core:armv6l:$RELEASE obs-repos/Core:armv6l:next
-    ln -s Core:mipsel:$RELEASE obs-repos/Core:mipsel:next
-fi
+while read project repo scheds ; do
+    if [ x$PRERELEASE = x ]; then
+	rm -f obs-repos/${project}:latest
+	ln -s ${project}:$RELEASE obs-repos/${project}:latest
+    else
+	rm -f obs-repos/${project}:next
+	ln -s ${project}:$RELEASE obs-repos/${project}:next
+    fi
+done <<< $PROJECTS
 
 grab_build()
 {
