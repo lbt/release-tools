@@ -3,8 +3,9 @@ ORIG=$PWD
 TOOLS=$PWD/tools
 
 RELEASE=$1
-API=$2
-RSYNC=$3
+
+# Get Project configuration
+. release.conf
 
 # This script creates a mer release intended to appear on http://releases.merproject.org/releases/
 
@@ -74,16 +75,6 @@ if [ x$1 = x -o x$2 = x -o x$3 = x ]; then
     echo Syntax: tools/createrelease.sh RELEASE OBSAPI RSYNCURL
     exit 0
 fi
-
-# List of project repo arch schedulers(: sep) to release
-PROJECTS="
-Core:i586 Core_i586 i586 i586
-Core:i486 Core_i486 i486 i586
-Core:armv7l Core_armv7l armv7l i586:armv7el
-Core:armv7hl Core_armv7hl armv7hl i586:armv8el
-Core:armv6l Core_armv6l armv6l i586:armv7el
-Core:mipsel Core_mipsel mipsel i586:mips
-"
 
 if [ x$RESYNC = x -a x$SKIPWGET = x ]; then
     # If a dumpbuild fails, abort
