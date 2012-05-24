@@ -117,8 +117,8 @@ if [ x$RESYNC = x -a x$NO_GRAB = x ]; then
         # Now update the repo in the cross areas (this will need some grouping generated for easy installation)
     done <<< $PROJECTS
     if [[ $CROSS ]]; then
-	(cd releases/$RELEASE/builds/i486/cross; createrepo .)
-	(cd releases/$RELEASE/builds/i586/cross; createrepo .)
+	createrepo releases/$RELEASE/builds/i486/cross
+	createrepo releases/$RELEASE/builds/i586/cross
     fi
 fi
 
