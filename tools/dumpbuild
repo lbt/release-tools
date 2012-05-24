@@ -18,10 +18,11 @@ export scheduler
 for scheduler in "${SCHEDULERS[@]}"; do
 	mkdir -p $scheduler
 	cd $scheduler
-	wget -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=cache
-	wget -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=names
-	wget -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=binaryversions
-	wget -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=solvstate
+	echo Getting metadata for $scheduler
+	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=cache
+	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=names
+	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=binaryversions
+	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=solvstate
 	# Grab 
 	python $ORIG/tools/printbinaries.py "_repository?view=names" | xargs -L1 -Ixxx bash -c 'curl "$API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?xxx" \| cpio -idvm'
 	cd ..
