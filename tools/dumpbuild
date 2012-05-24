@@ -4,7 +4,8 @@ API=$1
 OBSPROJECT=$2
 OUTDIR=$3
 REPONAME=$4
-SCHEDULERS="$5"
+IFS=: read -ra SCHEDULERS <<< $5 # : seperated list of architectures in $5
+
 [[ -d obs-repos/$OUTDIR ]] && {
     echo "obs-repos/$OUTDIR exists already. Looks like you already fetched this release from OBS"
     echo 'remove the obs-repos/*$RELEASE directories manually if you need to re-fetch'
@@ -12,7 +13,8 @@ SCHEDULERS="$5"
 }
 mkdir -p obs-repos/$OUTDIR/$REPONAME
 cd obs-repos/$OUTDIR/$REPONAME
-for scheduler in $SCHEDULERS; do
+
+for scheduler in "${SCHEDULERS[@]}"; do
 	mkdir -p $scheduler
 	cd $scheduler
 	wget -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=cache
