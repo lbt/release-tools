@@ -22,6 +22,6 @@ for scheduler in "${SCHEDULERS[@]}"; do
 	wget -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=binaryversions
 	wget -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=solvstate
 	# Grab 
-	python $ORIG/tools/printbinaries.py "_repository?view=names" | xargs -L1 -Ixxx $ORIG/tools/curlunpack "$API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?xxx"
+	python $ORIG/tools/printbinaries.py "_repository?view=names" | xargs -L1 -Ixxx bash -c 'curl "$API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?xxx" \| cpio -idvm'
 	cd ..
 done
