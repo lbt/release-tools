@@ -36,7 +36,7 @@ build2repo()
     # removes signatures, tweaks debug* things, handles -cross and makes the repositories
     # eg : rsync://be.example.com/obsrepos
     # It takes 4 args:
-    RSYNCPATH=$1   # Path to the
+    RSYNCPATH=$1   # Path to the rpms
     NAME=$2       # The architecture name
     GROUPXML=$3
     PATTERNXML=$4
