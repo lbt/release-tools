@@ -28,41 +28,43 @@ RSYNC=$3
 # Set NORSYNC to skip the push to public servers
 # Set NOGRAB to skip the restructuring into the releases/ area
 
-grab_build()
+build2repo()
 {
-    SYNCPATH=$1
-    NAME=$2
-    mkdir -p releases/$RELEASE/builds/$NAME
-    cd releases/$RELEASE/builds/$NAME
-    mkdir -p packages debug
-    cd packages
+    # This gets binary rpms from the build RSYNC source path passed into the main script
+    # removes signatures, tweaks debug* things, handles -cross and makes the repositories
+    # eg : rsync://be.example.com/obsrepos
+    # It takes 4 args:
+    RSYNCPATH=$1   # Path to the
+    NAME=$2       # The architecture name
+    GROUPXML=$3
+    PATTERNXML=$4
+
+    # Phase 1 : get and prepare rpms
+    mkdir -p releases/$RELEASE/builds/$NAME/{packages,debug}
     echo copying from OBS repo to releases
-    rsync  -aHx --verbose $RSYNC/$SYNCPATH/* --exclude=*.src.rpm --exclude=repocache/ --exclude=*.repo --exclude=repodata/ --exclude=src/ --exclude=dontuse/ --include=*.rpm .
+    rsync  -aHx --verbose $RSYNCPATH/* --exclude=*.src.rpm --exclude=repocache/ --exclude=*.repo --exclude=repodata/ --exclude=src/ --exclude=dontuse/ --include=*.rpm releases/$RELEASE/builds/$NAME/packages/
+
+
     echo removing signatures
-    find -name \*.rpm | xargs -L1 rpm --delsign
-    mv */*-debuginfo-* ../debug
-    mv */*-debugsource-* ../debug
+    find releases/$RELEASE/builds/$NAME/packages/ -name \*.rpm | xargs -L1 rpm --delsign
+    mv releases/$RELEASE/builds/$NAME/packages/*/*-debug{info,source}-* releases/$RELEASE/builds/$NAME/debug/
+
     # Move all cross- gcc/binutils packages to the relevant arch's cross/ area
     case $NAME in
-	*86 ) ;;
+	*86* ) ;; # Ignore cross for i{3,4,5,6}86 and x86_64 ?
 	* )
-	    echo "Preparing /cross"
-	    mv  */cross-*{gcc,binutils}*.i486.rpm ../../i486/cross/
-	    mv  */cross-*{gcc,binutils}*.i586.rpm ../../i586/cross/
+	    echo "Preparing /cross" # This may need to be handled better with x86_64 etc
+	    mv releases/$RELEASE/builds/$NAME/packages/*/cross-*{gcc,binutils}*.i{4,5}86.rpm releases/$RELEASE/builds/i486/cross/
 	    ;;
     esac
-    # Apply package groups and create repository
-    createrepo -g $ORIG/obs-projects/Core/$NAME/group.xml .
-    cp $ORIG/obs-projects/Core/$NAME/patterns.xml repodata/
-    modifyrepo repodata/patterns.xml repodata/
-    # No need for package groups in debug symbolsA
-    cd ../debug
-    createrepo .
-    cd $ORIG
+    # Phase 2 : Apply package groups and create repository
+    createrepo -g $GROUPXML releases/$RELEASE/builds/$NAME/packages/
+    cp $PATTERNXML releases/$RELEASE/builds/$NAME/packages/repodata/
+    modifyrepo releases/$RELEASE/builds/$NAME/packages/repodata/patterns.xml releases/$RELEASE/builds/$NAME/packages/repodata/
+    # No need for package groups in debug symbols
+    createrepo releases/$RELEASE/builds/$NAME/debug/
     # Remove confusing empty directories
-    cd releases/$RELEASE/builds/$NAME/packages
-    rmdir --ignore-fail-on-non-empty *
-    cd $ORIG
+    rmdir --ignore-fail-on-non-empty releases/$RELEASE/builds/$NAME/packages/*
 }
 
 ################
