@@ -72,19 +72,19 @@ if [ x$1 = x -o x$2 = x -o x$3 = x ]; then
     exit 0
 fi
 
-# List of project repo schedulers(: sep) to release
+# List of project repo arch schedulers(: sep) to release
 PROJECTS="
-Core:i586 Core_i586 i586
-Core:i486 Core_i486 i586
-Core:armv7l Core_armv7l i586:armv7el
-Core:armv7hl Core_armv7hl i586:armv8el
-Core:armv6l Core_armv6l i586:armv7el
-Core:mipsel Core_mipsel i586:mips
+Core:i586 Core_i586 i586 i586
+Core:i486 Core_i486 i486 i586
+Core:armv7l Core_armv7l armv7l i586:armv7el
+Core:armv7hl Core_armv7hl armv7hl i586:armv8el
+Core:armv6l Core_armv6l armv6l i586:armv7el
+Core:mipsel Core_mipsel mipsel i586:mips
 "
 
 if [ x$RESYNC = x -a x$SKIPWGET = x ]; then
     # If a dumpbuild fails, abort
-    while read project repo scheds ; do
+    while read project repo arch scheds ; do
 	echo "Process $project with repo $repo for $scheds"
 	set -e
 	$TOOLS/dumpbuild "$API" "$project" ${project}:$RELEASE $repo $scheds
@@ -92,7 +92,7 @@ if [ x$RESYNC = x -a x$SKIPWGET = x ]; then
     done <<< $PROJECTS
 fi
 
-while read project repo scheds ; do
+while read project repo arch scheds ; do
     if [ x$PRERELEASE = x ]; then
 	rm -f obs-repos/${project}:latest
 	ln -s ${project}:$RELEASE obs-repos/${project}:latest
@@ -104,17 +104,19 @@ done <<< $PROJECTS
 
 
 if [ x$RESYNC = x -a x$NO_GRAB = x ]; then
-    grab_build Core:/i586/Core_i586 i586
-    grab_build Core:/i486/Core_i486 i486 
-    mkdir -p releases/$RELEASE/builds/i486/cross
-    mkdir -p releases/$RELEASE/builds/i586/cross
-    grab_build Core:/armv7l/Core_armv7l armv7l
-    grab_build Core:/armv7hl/Core_armv7hl armv7hl
-    grab_build Core:/armv6l/Core_armv6l armv6l
-    grab_build Core:/mipsel/Core_mipsel mipsel
-    # Now update the repo in the cross areas (this will need some grouping generated for easy installation)
-    (cd releases/$RELEASE/builds/i486/cross; createrepo .)
-    (cd releases/$RELEASE/builds/i586/cross; createrepo .)
+    if [[ $CROSS ]]; then
+	mkdir -p releases/$RELEASE/builds/i486/cross
+	mkdir -p releases/$RELEASE/builds/i586/cross
+    fi
+    while read project repo arch scheds ; do
+	projdir=${project//:/:\/}
+	grab_build ${projdir}/$repo $arch
+        # Now update the repo in the cross areas (this will need some grouping generated for easy installation)
+    done <<< $PROJECTS
+    if [[ $CROSS ]]; then
+	(cd releases/$RELEASE/builds/i486/cross; createrepo .)
+	(cd releases/$RELEASE/builds/i586/cross; createrepo .)
+    fi
 fi
 
 if [ x$NORSYNC = x1 ]; then
