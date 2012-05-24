@@ -5,7 +5,7 @@ TOOLS=$PWD/tools
 RELEASE=$1
 
 # Get Project configuration
-. release.conf
+. tools/release.conf
 
 # This script creates a mer release intended to appear on http://releases.merproject.org/releases/
 
