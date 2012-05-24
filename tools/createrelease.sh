@@ -77,8 +77,8 @@ build2repo()
 
 ################
 
-if [ x$1 = x -o x$2 = x -o x$3 = x ]; then
-    echo Syntax: tools/createrelease.sh RELEASE OBSAPI RSYNCURL
+if [ x$1 = x ]; then
+    echo Syntax: tools/createrelease.sh RELEASE
     exit 0
 fi
 
