@@ -112,7 +112,7 @@ if [ x$RESYNC = x -a x$NO_GRAB = x ]; then
     fi
     while read project repo arch scheds ; do
 	projdir=${project//:/:\/}
-	grab_build ${projdir}/$repo $arch
+	build2repo $RSYNC/${projdir}/$repo $arch $ORIG/obs-projects/Core/$NAME/group.xml $ORIG/obs-projects/Core/$NAME/patterns.xml
         # Now update the repo in the cross areas (this will need some grouping generated for easy installation)
     done <<< $PROJECTS
     if [[ $CROSS ]]; then
