@@ -24,6 +24,9 @@ for scheduler in "${SCHEDULERS[@]}"; do
 	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=binaryversions
 	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=solvstate
 	# Grab 
-	python $ORIG/tools/printbinaries.py "_repository?view=names" | xargs -L1 -Ixxx bash -c 'curl "$API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?xxx" \| cpio -idvm'
+	echo Getting binaries for $scheduler
+	python $ORIG/tools/printbinaries.py "_repository?view=names" |	while read -r binaries ; do
+	    curl "$API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?$binaries" | cpio -idvm
+	done
 	cd ..
 done
