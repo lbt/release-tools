@@ -60,9 +60,15 @@ build2repo()
 	    ;;
     esac
     # Phase 2 : Apply package groups and create repository
-    createrepo -g $GROUPXML releases/$RELEASE/builds/$NAME/packages/
-    cp $PATTERNXML releases/$RELEASE/builds/$NAME/packages/repodata/
-    modifyrepo releases/$RELEASE/builds/$NAME/packages/repodata/patterns.xml releases/$RELEASE/builds/$NAME/packages/repodata/
+    if [ -e $GROUPXML ] ; then
+	createrepo -g $GROUPXML releases/$RELEASE/builds/$NAME/packages/
+    else
+	createrepo releases/$RELEASE/builds/$NAME/packages/
+    fi
+    [ -e $PATTERNXML ] && {
+	cp $PATTERNXML releases/$RELEASE/builds/$NAME/packages/repodata/
+	modifyrepo releases/$RELEASE/builds/$NAME/packages/repodata/patterns.xml releases/$RELEASE/builds/$NAME/packages/repodata/
+    }
     # No need for package groups in debug symbols
     createrepo releases/$RELEASE/builds/$NAME/debug/
     # Remove confusing empty directories
