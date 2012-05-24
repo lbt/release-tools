@@ -224,7 +224,7 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     
                     print binaries
 
-                    cpiooutput = subprocess.Popen(["tools/createcpio", pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4]], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate(binaries)[0]
+                    cpiooutput = subprocess.Popen(["cpio","-o","-H","newc","-C","8192"], cwd="/".join(pathparts[2:5]), stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate(binaries)[0]
 #                    cpiooutput = subprocess.Popen(["/usr/bin/curl", "http://192.168.100.213:81/public/build/Core:i586/Core_i586/i586/_repository?" + pathparsed[4]], stdin=subprocess.PIPE, stdout=subprocess.PIPE).communicate()[0]
                     contentsize, content = string2stream(cpiooutput)
                     print contentsize
