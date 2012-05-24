@@ -1,8 +1,9 @@
 #!/bin/sh
 ORIG=$PWD
-API=$2
 TOOLS=$PWD/tools
+
 RELEASE=$1
+API=$2
 RSYNC=$3
 
 # This script creates a mer release intended to appear on http://releases.merproject.org/releases/
