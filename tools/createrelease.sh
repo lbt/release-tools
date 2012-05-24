@@ -129,12 +129,12 @@ fi
 if [ x$PRERELEASE = x ]; then
     echo $RELEASE > obs-repos/latest.release
     echo $RELEASE > releases/latest-release
-    rm releases/latest
+    rm -f releases/latest
     ln -s $RELEASE releases/latest
 else
     echo $RELEASE > obs-repos/next.release
     echo $RELEASE > releases/next-release
-    rm releases/next
+    rm -f releases/next
     ln -s $RELEASE releases/next
 fi
 
