@@ -201,16 +201,17 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 # pathparts[2]  == project
                 #          [3]  == repository
                 #          [4]  == scheduler
+                prs_path="/".join(pathparts[2:5])
                 if query.has_key("view") and query["view"][0] == "cache":
-                    if os.path.isfile(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=cache"):
-                        contentsize, contentmtime, content = file2stream(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=cache")
+                    if os.path.isfile(prs_path + "/_repository?view=cache"):
+                        contentsize, contentmtime, content = file2stream(prs_path + "/_repository?view=cache")
                         contenttype = "application/octet-stream"
                     else:
                         contentsize, contentmtime, content = file2stream("tools/emptyrepositorycache.cpio")
                         contenttype = "application/octet-stream"
                 elif query.has_key("view") and query["view"][0] == "solvstate":
-                    if os.path.isfile(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=solvstate"):
-                        contentsize, contentmtime, content = file2stream(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=solvstate")
+                    if os.path.isfile(prs_path + "/_repository?view=solvstate"):
+                        contentsize, contentmtime, content = file2stream(prs_path + "/_repository?view=solvstate")
                         contenttype = "application/octet-stream"
                     else:
                         contentsize, contentmtime, content = file2stream("tools/emptyrepositorycache.cpio")
@@ -218,8 +219,8 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 elif query.has_key("view") and query["view"][0] == "cpio":
                     binaries = ""
                     for x in query["binary"]:
-                        if os.path.isfile(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/" + os.path.basename(x) + ".rpm"):
-                            assert "" + pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/" + os.path.basename(x) + ".rpm was not found"
+                        if os.path.isfile(prs_path + "/" + os.path.basename(x) + ".rpm"):
+                            assert "" + prs_path + "/" + os.path.basename(x) + ".rpm was not found"
                         binaries = binaries + os.path.basename(x) + ".rpm\n"
                     
                     print binaries
@@ -232,8 +233,8 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     contenttype = "application/x-cpio"
                     ##
                 elif query.has_key("view") and query["view"][0] == "names":
-                    if os.path.isfile(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=names"):
-                        doc = xml.dom.minidom.parse(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=names")
+                    if os.path.isfile(prs_path + "/_repository?view=names"):
+                        doc = xml.dom.minidom.parse(prs_path + "/_repository?view=names")
                         removables = []
                         for x in doc.getElementsByTagName("binary"):
                             if not os.path.splitext(x.attributes["filename"].value)[0] in query["binary"]:
@@ -249,8 +250,8 @@ class SimpleHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                         contentmtime = time.time()
                     ##
                 elif query.has_key("view") and query["view"][0] == "binaryversions":                   
-                    if os.path.isfile(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=cache"):
-                        doc = xml.dom.minidom.parse(pathparts[2] + "/" + pathparts[3] + "/" + pathparts[4] + "/_repository?view=binaryversions")
+                    if os.path.isfile(prs_path + "/_repository?view=cache"):
+                        doc = xml.dom.minidom.parse(prs_path + "/_repository?view=binaryversions")
                         removables = []
                         for x in doc.getElementsByTagName("binary"):
                             if not os.path.splitext(x.attributes["name"].value)[0] in query["binary"]:
