@@ -85,7 +85,7 @@ fi
 if [ x$RESYNC = x -a x$SKIPWGET = x ]; then
     # If a dumpbuild fails, abort
     while read project repo arch scheds ; do
-	echo "Process $project with repo $repo for $scheds"
+	echo "Get OBS build for $project with repo $repo for $scheds"
 	set -e
 	$TOOLS/dumpbuild "$API" "$project" ${project}:$RELEASE $repo $scheds
 	set +e
@@ -94,9 +94,11 @@ fi
 
 while read project repo arch scheds ; do
     if [ x$PRERELEASE = x ]; then
+	echo "Make latest for $project"
 	rm -f obs-repos/${project}:latest
 	ln -s ${project}:$RELEASE obs-repos/${project}:latest
     else
+	echo "Make next for $project"
 	rm -f obs-repos/${project}:next
 	ln -s ${project}:$RELEASE obs-repos/${project}:next
     fi
@@ -109,6 +111,7 @@ if [ x$RESYNC = x -a x$NO_GRAB = x ]; then
 	mkdir -p releases/$RELEASE/builds/i586/cross
     fi
     while read project repo arch scheds ; do
+	echo "Make repos for $project"
 	projdir=${project//:/:\/}
 	build2repo $RSYNC/${projdir}/$repo $arch $ORIG/obs-projects/Core/$NAME/group.xml $ORIG/obs-projects/Core/$NAME/patterns.xml
         # Now update the repo in the cross areas (this will need some grouping generated for easy installation)
