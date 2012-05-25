@@ -17,3 +17,9 @@ RSYNC=rsync://cdownload.in.meego.com/repos
 # The directory to save the interim MDS and repositories to
 OBSDIR=~/obs-repos
 RELEASEDIR=~/releases
+
+# The target for the OBS MDS (rsync destination)
+RSYNC_OBS_PUBLISH=merreleases@monster.tspre.org:~/public_html/obs-repos/
+
+# The target for the repository (rsync destination)
+RSYNC_REPO_PUBLISH=merreleases@monster.tspre.org:~/public_html/releases/

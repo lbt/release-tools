@@ -225,11 +225,20 @@ fi
 if [[ $PUBLISH ]]; then
     echo "################################################################ Publish"
 
-#rsync -aHx --progress $OBSDIR/Core\:*\:$RELEASE $OBSDIR/Core\:*\:latest merreleases@monster.tspre.org:~/public_html/obs-repos/
-#rsync -aHx --progress $OBSDIR/latest.release $OBSDIR/next.release merreleases@monster.tspre.org:~/public_html/obs-repos/
-#rsync -aHx --progress $RELEASEDIR/$RELEASE merreleases@monster.tspre.org:~/public_html/releases/
-#rsync -aHx --progress $RELEASEDIR/latest-release $RELEASEDIR/latest $RELEASEDIR/next-release $RELEASEDIR/next merreleases@monster.tspre.org:~/public_html/releases/
+    while read -r project repo arch scheds ; do
+	echo "Publish OBS build for $project"
+	rsync -aHx --progress $OBSDIR/${project}:$RELEASE $RSYNC_OBS_PUBLISH
 
+	if [[ $PRERELEASE ]]; then
+	    rsync -aHx --progress $OBSDIR/${project}:$PRERELEASE $OBSDIR/$PRERELEASE.release $RSYNC_OBS_PUBLISH
+	fi
+    done <<< "$PROJECTS"
+
+    echo "Publish Repos for $project with repo $repo for $scheds"
+    rsync -aHx --progress $RELEASEDIR/$RELEASE $RSYNC_REPO_PUBLISH
+    if [[ $PRERELEASE ]]; then
+	    rsync -aHx --progress $RELEASEDIR/$PRERELEASE-release $RELEASEDIR/$PRERELEASE $RSYNC_REPO_PUBLISH
+    fi
 fi
 
 exit 0
