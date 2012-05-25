@@ -4,6 +4,8 @@
 PROJECTS="
 Mer:Tools Mer_Core_i486 i586 i586
 "
+# Set this to 1 if there are x86 cross- binaries in the arm/mips repos
+CROSS=
 
 # This should point to a public api
 API=https://api.pub.meego.com/public
