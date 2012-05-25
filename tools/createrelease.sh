@@ -101,7 +101,7 @@ dumpbuild ()
 	wget $wget_opts -P $targetdir $baseurl/_repository?view=solvstate
 	echo Getting binaries for $scheduler
 	python $ORIG/tools/printbinaries.py "$targetdir/_repository?view=names" | while read -r binaries ; do
-	    curl "$API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?$binaries" | cpio -idvm
+	    curl -sS "$baseurl/_repository?$binaries" | (cd $targetdir; cpio -idvm)
 	done
     done
 }
