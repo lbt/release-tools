@@ -88,13 +88,12 @@ dumpbuild ()
 	echo 'remove the obs-repos/*$RELEASE directories manually if you need to re-fetch'
 	exit 1
     }
-    mkdir -p obs-repos/$OUTDIR/$REPONAME
 
     wget_opts="-q --no-check-certificate -N -c -r -nd -nH -p"
     for scheduler in "${SCHEDULERS[@]}"; do
-	mkdir -p $scheduler
 	baseurl=$API/build/$OBSPROJECT/$REPONAME/$scheduler
 	targetdir=obs-repos/$OUTDIR/$REPONAME/$scheduler
+	mkdir -p $targetdir
 	echo Getting metadata for $scheduler
 	wget $wget_opts -P $targetdir $baseurl/_repository?view=cache
 	wget $wget_opts -P $targetdir $baseurl/_repository?view=names
