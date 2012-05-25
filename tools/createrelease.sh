@@ -167,7 +167,7 @@ dumpbuild ()
 if [[ $GET_FROM_OBS ]]; then
     echo "################################################################ Get from OBS"
     # If a dumpbuild fails, abort
-    while read project repo arch scheds ; do
+    while read -r project repo arch scheds ; do
 	echo "Get OBS build for $project with repo $repo for $scheds"
 	set -e
 	dumpbuild "$API" "$project" ${project}:$RELEASE $repo $scheds
@@ -175,7 +175,7 @@ if [[ $GET_FROM_OBS ]]; then
     done <<< $PROJECTS
 
     if [[ $PRERELEASE ]]; then
-	while read project repo arch scheds ; do
+	while read -r project repo arch scheds ; do
 	    echo "Make $PRERELEASE for $project"
 	    rm -f $OBSDIR/${project}:$PRERELEASE
 	    ln -s ${project}:$RELEASE $OBSDIR/${project}:$PRERELEASE
@@ -191,7 +191,7 @@ if [[ $MAKE_REPOS ]]; then
 	mkdir -p $RELEASEDIR/$RELEASE/builds/i486/cross
 	mkdir -p $RELEASEDIR/$RELEASE/builds/i586/cross
     fi
-    while read project repo arch scheds ; do
+    while read -r project repo arch scheds ; do
 	echo "Make repos for $project"
 	projdir=${project//:/:\/}
 	build2repo $RSYNC/${projdir}/$repo $arch $ORIG/obs-projects/Core/$NAME/group.xml $ORIG/obs-projects/Core/$NAME/patterns.xml
