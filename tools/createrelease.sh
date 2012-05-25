@@ -89,6 +89,39 @@ while read -r project repo arch scheds ; do
     if ! [[ $scheds ]]; then echo "Invalid line in PROJECTS in releases.conf, no schedulers"; exit 1; fi # not enough values
 done <<< "$PROJECTS"
 
+################
+
+dumpbuild ()
+{
+    API=$1
+    OBSPROJECT=$2
+    OUTDIR=$3
+    REPONAME=$4
+    IFS=: read -ra SCHEDULERS <<< $5 # : seperated list of architectures in $5
+
+    [[ -d $OBSDIR/$OUTDIR ]] && {
+	echo "$OBSDIR/$OUTDIR exists already. Looks like you already fetched this release from OBS"
+	echo 'remove the $OBSDIR/*$RELEASE directories manually if you need to re-fetch'
+	exit 1
+    }
+
+    wget_opts="-q --no-check-certificate -N -c -r -nd -nH -p"
+    for scheduler in "${SCHEDULERS[@]}"; do
+	baseurl=$API/build/$OBSPROJECT/$REPONAME/$scheduler
+	targetdir=$OBSDIR/$OUTDIR/$REPONAME/$scheduler
+	mkdir -p $targetdir
+	echo Getting metadata for $scheduler
+	wget $wget_opts -P $targetdir $baseurl/_repository?view=cache
+	wget $wget_opts -P $targetdir $baseurl/_repository?view=names
+	wget $wget_opts -P $targetdir $baseurl/_repository?view=binaryversions
+	wget $wget_opts -P $targetdir $baseurl/_repository?view=solvstate
+	echo Getting binaries for $scheduler
+	python $ORIG/tools/printbinaries.py "$targetdir/_repository?view=names" | while read -r binaries ; do
+	    curl -sS "$baseurl/_repository?$binaries" | (cd $targetdir; cpio -idvm)
+	done
+    done
+}
+
 build2repo()
 {
     # This gets binary rpms from the build RSYNC source path passed into the main script
@@ -135,37 +168,6 @@ build2repo()
     createrepo $RELEASEDIR/$RELEASE/builds/$NAME/debug/
     # Remove confusing empty directories
     rmdir --ignore-fail-on-non-empty $RELEASEDIR/$RELEASE/builds/$NAME/packages/*
-}
-
-dumpbuild ()
-{
-    API=$1
-    OBSPROJECT=$2
-    OUTDIR=$3
-    REPONAME=$4
-    IFS=: read -ra SCHEDULERS <<< $5 # : seperated list of architectures in $5
-
-    [[ -d $OBSDIR/$OUTDIR ]] && {
-	echo "$OBSDIR/$OUTDIR exists already. Looks like you already fetched this release from OBS"
-	echo 'remove the $OBSDIR/*$RELEASE directories manually if you need to re-fetch'
-	exit 1
-    }
-
-    wget_opts="-q --no-check-certificate -N -c -r -nd -nH -p"
-    for scheduler in "${SCHEDULERS[@]}"; do
-	baseurl=$API/build/$OBSPROJECT/$REPONAME/$scheduler
-	targetdir=$OBSDIR/$OUTDIR/$REPONAME/$scheduler
-	mkdir -p $targetdir
-	echo Getting metadata for $scheduler
-	wget $wget_opts -P $targetdir $baseurl/_repository?view=cache
-	wget $wget_opts -P $targetdir $baseurl/_repository?view=names
-	wget $wget_opts -P $targetdir $baseurl/_repository?view=binaryversions
-	wget $wget_opts -P $targetdir $baseurl/_repository?view=solvstate
-	echo Getting binaries for $scheduler
-	python $ORIG/tools/printbinaries.py "$targetdir/_repository?view=names" | while read -r binaries ; do
-	    curl -sS "$baseurl/_repository?$binaries" | (cd $targetdir; cpio -idvm)
-	done
-    done
 }
 
 ################
