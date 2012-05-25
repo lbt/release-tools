@@ -75,6 +75,40 @@ build2repo()
     rmdir --ignore-fail-on-non-empty releases/$RELEASE/builds/$NAME/packages/*
 }
 
+dumpbuild ()
+{
+    export API=$1
+    export OBSPROJECT=$2
+    OUTDIR=$3
+    export REPONAME=$4
+    IFS=: read -ra SCHEDULERS <<< $5 # : seperated list of architectures in $5
+
+    [[ -d obs-repos/$OUTDIR ]] && {
+	echo "obs-repos/$OUTDIR exists already. Looks like you already fetched this release from OBS"
+	echo 'remove the obs-repos/*$RELEASE directories manually if you need to re-fetch'
+	exit 1
+    }
+    mkdir -p obs-repos/$OUTDIR/$REPONAME
+    cd obs-repos/$OUTDIR/$REPONAME
+
+    export scheduler
+    for scheduler in "${SCHEDULERS[@]}"; do
+	mkdir -p $scheduler
+	cd $scheduler
+	echo Getting metadata for $scheduler
+	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=cache
+	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=names
+	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=binaryversions
+	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=solvstate
+	# Grab 
+	echo Getting binaries for $scheduler
+	python $ORIG/tools/printbinaries.py "_repository?view=names" |	while read -r binaries ; do
+	    curl "$API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?$binaries" | cpio -idvm
+	done
+	cd ..
+    done
+}
+
 ################
 
 if [ x$1 = x ]; then
@@ -87,7 +121,7 @@ if [ x$RESYNC = x -a x$SKIPWGET = x ]; then
     while read project repo arch scheds ; do
 	echo "Get OBS build for $project with repo $repo for $scheds"
 	set -e
-	$TOOLS/dumpbuild "$API" "$project" ${project}:$RELEASE $repo $scheds
+	dumpbuild "$API" "$project" ${project}:$RELEASE $repo $scheds
 	set +e
     done <<< $PROJECTS
 fi
