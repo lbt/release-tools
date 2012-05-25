@@ -89,23 +89,22 @@ dumpbuild ()
 	exit 1
     }
     mkdir -p obs-repos/$OUTDIR/$REPONAME
-    cd obs-repos/$OUTDIR/$REPONAME
 
     export scheduler
+    wget_opts="-q --no-check-certificate -N -c -r -nd -nH -p"
     for scheduler in "${SCHEDULERS[@]}"; do
 	mkdir -p $scheduler
-	cd $scheduler
+	baseurl=$API/build/$OBSPROJECT/$REPONAME/$scheduler
+	targetdir=obs-repos/$OUTDIR/$REPONAME/$scheduler
 	echo Getting metadata for $scheduler
-	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=cache
-	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=names
-	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=binaryversions
-	wget -q --no-check-certificate -N -c -r -nd -nH $API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?view=solvstate
-	# Grab 
+	wget $wget_opts -P $targetdir $baseurl/_repository?view=cache
+	wget $wget_opts -P $targetdir $baseurl/_repository?view=names
+	wget $wget_opts -P $targetdir $baseurl/_repository?view=binaryversions
+	wget $wget_opts -P $targetdir $baseurl/_repository?view=solvstate
 	echo Getting binaries for $scheduler
-	python $ORIG/tools/printbinaries.py "_repository?view=names" |	while read -r binaries ; do
+	python $ORIG/tools/printbinaries.py "$targetdir/_repository?view=names" | while read -r binaries ; do
 	    curl "$API/build/$OBSPROJECT/$REPONAME/$scheduler/_repository?$binaries" | cpio -idvm
 	done
-	cd ..
     done
 }
 
