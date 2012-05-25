@@ -1,6 +1,5 @@
 #!/bin/bash
 ORIG=$PWD
-TOOLS=$PWD/tools
 
 # Get Project configuration
 . tools/release.conf
