@@ -11,3 +11,7 @@ API=https://api.pub.meego.com/public
 # This should permit rsync of /srv/obs/repos on the OBS be or a
 # suitable publishing slave
 RSYNC=rsync://cdownload.in.meego.com/repos
+
+# The directory to save the interim MDS and repositories to
+OBSDIR=~/obs-repos
+RELEASEDIR=~/releases

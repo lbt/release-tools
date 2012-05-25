@@ -14,10 +14,10 @@ TOOLS=$PWD/tools
 #  obs-projects/
 #    This contains the obs project metadata - it's used to obtain the group data to build the repos
 # It updates the following subdirs:
-#  obs-repos/
+#  $OBSDIR/
 #    This is a mirror of the OBS built rpms and some useful OBS state (such as solvstate)
 #    It's a transient holding directory as rpms are transferred to the correct structure in ...
-#  releases/
+#  $RELEASEDIR/
 #    This area contains the completed release ready to be rsync'ed to the public server
 
 usage()
@@ -81,6 +81,9 @@ done
 if [[ -z $STEPS ]]; then usage; exit 1; fi
 if [[ -z $RELEASE ]]; then usage; exit 1; fi
 
+if [[ -z $OBSDIR ]] || ! [[ -d $OBSDIR ]] ; then echo "The OBSDIR variable is set to '$OBSDIR' which is not a directory. Please correct this in release.conf"; exit 1; fi
+if [[ -z $RELEASEDIR ]] || ! [[ -d $RELEASEDIR ]] ; then echo "The RELEASEDIR variable is set to '$RELEASEDIR' which is not a directory. Please correct this in release.conf"; exit 1; fi
+
 build2repo()
 {
     # This gets binary rpms from the build RSYNC source path passed into the main script
@@ -93,37 +96,37 @@ build2repo()
     PATTERNXML=$4
 
     # Phase 1 : get and prepare rpms
-    mkdir -p releases/$RELEASE/builds/$NAME/{packages,debug}
+    mkdir -p $RELEASEDIR/$RELEASE/builds/$NAME/{packages,debug}
     echo copying from OBS repo to releases
-    rsync  -aHx --verbose $RSYNCPATH/* --exclude=*.src.rpm --exclude=repocache/ --exclude=*.repo --exclude=repodata/ --exclude=src/ --exclude=dontuse/ --include=*.rpm releases/$RELEASE/builds/$NAME/packages/
+    rsync  -aHx --verbose $RSYNCPATH/* --exclude=*.src.rpm --exclude=repocache/ --exclude=*.repo --exclude=repodata/ --exclude=src/ --exclude=dontuse/ --include=*.rpm $RELEASEDIR/$RELEASE/builds/$NAME/packages/
 
 
     echo removing signatures
-    find releases/$RELEASE/builds/$NAME/packages/ -name \*.rpm | xargs -L1 rpm --delsign
-    mv releases/$RELEASE/builds/$NAME/packages/*/*-debug{info,source}-* releases/$RELEASE/builds/$NAME/debug/
+    find $RELEASEDIR/$RELEASE/builds/$NAME/packages/ -name \*.rpm | xargs -L1 rpm --delsign
+    mv $RELEASEDIR/$RELEASE/builds/$NAME/packages/*/*-debug{info,source}-* $RELEASEDIR/$RELEASE/builds/$NAME/debug/
 
     # Move all cross- gcc/binutils packages to the relevant arch's cross/ area
     case $NAME in
 	*86* ) ;; # Ignore cross for i{3,4,5,6}86 and x86_64 ?
 	* )
 	    echo "Preparing /cross" # This may need to be handled better with x86_64 etc
-	    mv releases/$RELEASE/builds/$NAME/packages/*/cross-*{gcc,binutils}*.i{4,5}86.rpm releases/$RELEASE/builds/i486/cross/
+	    mv $RELEASEDIR/$RELEASE/builds/$NAME/packages/*/cross-*{gcc,binutils}*.i{4,5}86.rpm $RELEASEDIR/$RELEASE/builds/i486/cross/
 	    ;;
     esac
     # Phase 2 : Apply package groups and create repository
     if [ -e $GROUPXML ] ; then
-	createrepo -g $GROUPXML releases/$RELEASE/builds/$NAME/packages/
+	createrepo -g $GROUPXML $RELEASEDIR/$RELEASE/builds/$NAME/packages/
     else
-	createrepo releases/$RELEASE/builds/$NAME/packages/
+	createrepo $RELEASEDIR/$RELEASE/builds/$NAME/packages/
     fi
     [ -e $PATTERNXML ] && {
-	cp $PATTERNXML releases/$RELEASE/builds/$NAME/packages/repodata/
-	modifyrepo releases/$RELEASE/builds/$NAME/packages/repodata/patterns.xml releases/$RELEASE/builds/$NAME/packages/repodata/
+	cp $PATTERNXML $RELEASEDIR/$RELEASE/builds/$NAME/packages/repodata/
+	modifyrepo $RELEASEDIR/$RELEASE/builds/$NAME/packages/repodata/patterns.xml $RELEASEDIR/$RELEASE/builds/$NAME/packages/repodata/
     }
     # No need for package groups in debug symbols
-    createrepo releases/$RELEASE/builds/$NAME/debug/
+    createrepo $RELEASEDIR/$RELEASE/builds/$NAME/debug/
     # Remove confusing empty directories
-    rmdir --ignore-fail-on-non-empty releases/$RELEASE/builds/$NAME/packages/*
+    rmdir --ignore-fail-on-non-empty $RELEASEDIR/$RELEASE/builds/$NAME/packages/*
 }
 
 dumpbuild ()
@@ -134,16 +137,16 @@ dumpbuild ()
     REPONAME=$4
     IFS=: read -ra SCHEDULERS <<< $5 # : seperated list of architectures in $5
 
-    [[ -d obs-repos/$OUTDIR ]] && {
-	echo "obs-repos/$OUTDIR exists already. Looks like you already fetched this release from OBS"
-	echo 'remove the obs-repos/*$RELEASE directories manually if you need to re-fetch'
+    [[ -d $OBSDIR/$OUTDIR ]] && {
+	echo "$OBSDIR/$OUTDIR exists already. Looks like you already fetched this release from OBS"
+	echo 'remove the $OBSDIR/*$RELEASE directories manually if you need to re-fetch'
 	exit 1
     }
 
     wget_opts="-q --no-check-certificate -N -c -r -nd -nH -p"
     for scheduler in "${SCHEDULERS[@]}"; do
 	baseurl=$API/build/$OBSPROJECT/$REPONAME/$scheduler
-	targetdir=obs-repos/$OUTDIR/$REPONAME/$scheduler
+	targetdir=$OBSDIR/$OUTDIR/$REPONAME/$scheduler
 	mkdir -p $targetdir
 	echo Getting metadata for $scheduler
 	wget $wget_opts -P $targetdir $baseurl/_repository?view=cache
@@ -160,7 +163,9 @@ dumpbuild ()
 ################
 
 # Step 1 : Get from OBS and update latest/next obs-repo
+# This populates ./obs-repos
 if [[ $GET_FROM_OBS ]]; then
+    echo "################################################################ Get from OBS"
     # If a dumpbuild fails, abort
     while read project repo arch scheds ; do
 	echo "Get OBS build for $project with repo $repo for $scheds"
@@ -172,17 +177,19 @@ if [[ $GET_FROM_OBS ]]; then
     if [[ $PRERELEASE ]]; then
 	while read project repo arch scheds ; do
 	    echo "Make $PRERELEASE for $project"
-	    rm -f obs-repos/${project}:$PRERELEASE
-	    ln -s ${project}:$RELEASE obs-repos/${project}:$PRERELEASE
+	    rm -f $OBSDIR/${project}:$PRERELEASE
+	    ln -s ${project}:$RELEASE $OBSDIR/${project}:$PRERELEASE
 	done <<< $PROJECTS
     fi
 fi
 
 # Step 2: Make repos in release area
+# This populates ./releases
 if [[ $MAKE_REPOS ]]; then
+    echo "################################################################ Make Repos"
     if [[ $CROSS ]]; then
-	mkdir -p releases/$RELEASE/builds/i486/cross
-	mkdir -p releases/$RELEASE/builds/i586/cross
+	mkdir -p $RELEASEDIR/$RELEASE/builds/i486/cross
+	mkdir -p $RELEASEDIR/$RELEASE/builds/i586/cross
     fi
     while read project repo arch scheds ; do
 	echo "Make repos for $project"
@@ -191,27 +198,28 @@ if [[ $MAKE_REPOS ]]; then
         # Now update the repo in the cross areas (this will need some grouping generated for easy installation)
     done <<< $PROJECTS
     if [[ $CROSS ]]; then
-	createrepo releases/$RELEASE/builds/i486/cross
-	createrepo releases/$RELEASE/builds/i586/cross
+	createrepo $RELEASEDIR/$RELEASE/builds/i486/cross
+	createrepo $RELEASEDIR/$RELEASE/builds/i586/cross
     fi
 
     if [[ $PRERELEASE ]]; then
-	echo $RELEASE > obs-repos/$PRERELEASE.release
-	echo $RELEASE > releases/$PRERELEASE-release
-	rm -f releases/$PRERELEASE
-	ln -s $RELEASE releases/$PRERELEASE
+	echo $RELEASE > $OBSDIR/$PRERELEASE.release
+	echo $RELEASE > $RELEASEDIR/$PRERELEASE-release
+	rm -f $RELEASEDIR/$PRERELEASE
+	ln -s $RELEASE $RELEASEDIR/$PRERELEASE
     fi
 fi
 
 # Step 3: Publish
+# This publishes ./releases
 if [[ $PUBLISH ]]; then
+    echo "################################################################ Publish"
 
-#rsync -aHx --progress obs-repos/Core\:*\:$RELEASE obs-repos/Core\:*\:latest merreleases@monster.tspre.org:~/public_html/obs-repos/
-#rsync -aHx --progress obs-repos/latest.release obs-repos/next.release merreleases@monster.tspre.org:~/public_html/obs-repos/
-#rsync -aHx --progress releases/$RELEASE merreleases@monster.tspre.org:~/public_html/releases/
-#rsync -aHx --progress releases/latest-release releases/latest releases/next-release releases/next merreleases@monster.tspre.org:~/public_html/releases/
+#rsync -aHx --progress $OBSDIR/Core\:*\:$RELEASE $OBSDIR/Core\:*\:latest merreleases@monster.tspre.org:~/public_html/obs-repos/
+#rsync -aHx --progress $OBSDIR/latest.release $OBSDIR/next.release merreleases@monster.tspre.org:~/public_html/obs-repos/
+#rsync -aHx --progress $RELEASEDIR/$RELEASE merreleases@monster.tspre.org:~/public_html/releases/
+#rsync -aHx --progress $RELEASEDIR/latest-release $RELEASEDIR/latest $RELEASEDIR/next-release $RELEASEDIR/next merreleases@monster.tspre.org:~/public_html/releases/
 
 fi
 
 exit 0
-
