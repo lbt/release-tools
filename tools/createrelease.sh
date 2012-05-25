@@ -1,9 +1,6 @@
 #!/bin/bash
 ORIG=$PWD
 
-# Get Project configuration
-. tools/release.conf
-
 # This script creates a mer release intended to appear on http://releases.merproject.org/releases/
 
 # Note that createrelease will take an instantaneous snapshot of the CI OBS - please ensure it is not busy
@@ -22,14 +19,21 @@ ORIG=$PWD
 usage()
 {
     cat <<EOF
-    usage: $1 [ --latest | --next ] [--all |  --get-from-obs | --make-repos | --publish ] ] <release>
+    usage: $1 [ --conf <conf> ] [ --latest | --next ] [--all |  --get-from-obs | --make-repos | --publish ] ] <release>
 
-     Create a repository and MDS release from an OBS project and OBS project repo
-     There are 3 steps
+     Create a repository and MDS release from an OBS project and OBS
+     project repo
+
+     --conf <conf> :
+               The information about the release (the OBS api to use,
+               the rsync source and targets etc) are given in a config
+               file. If none is provided then release.conf is used.
 
      Specify which steps (one of the following only):
-       --get-from-obs  : Just do the OBS pull and populate ./obs-repos from the OBS API
-       --make-repos    : Just make the zypper repositories from ./obs-repos -> ./releases
+       --get-from-obs  : Just do the OBS pull and populate ./obs-repos
+                          from the OBS API
+       --make-repos    : Just make the zypper repositories from
+                          ./obs-repos -> ./releases
        --publish       : Just publish via rsync
 
      To perform all the steps (normal use)
@@ -46,6 +50,7 @@ EOF
 }
 
 # Defaults
+CONFIG="tools/release.conf"
 PRERELEASE=
 GET_FROM_OBS=1
 MAKE_REPOS=1
@@ -56,6 +61,9 @@ STEPS=
 
 while [[ $1 ]] ; do
     case $1 in
+	--conf ) CONFIG=$2 ; shift
+	    [[ -r $CONFIG ]] || { echo "Config file '$CONFIG' is not readable"; exit 1; } ;;
+
 	--latest ) PRERELEASE=latest;;
 	--next   ) PRERELEASE=next;;
 
@@ -76,6 +84,9 @@ while [[ $1 ]] ; do
     esac
     shift
 done
+
+# Get Project configuration
+. $CONFIG
 
 if [[ -z $STEPS ]]; then usage; exit 1; fi
 if [[ -z $RELEASE ]]; then usage; exit 1; fi
