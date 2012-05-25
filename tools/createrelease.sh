@@ -77,10 +77,10 @@ build2repo()
 
 dumpbuild ()
 {
-    export API=$1
-    export OBSPROJECT=$2
+    API=$1
+    OBSPROJECT=$2
     OUTDIR=$3
-    export REPONAME=$4
+    REPONAME=$4
     IFS=: read -ra SCHEDULERS <<< $5 # : seperated list of architectures in $5
 
     [[ -d obs-repos/$OUTDIR ]] && {
@@ -90,7 +90,6 @@ dumpbuild ()
     }
     mkdir -p obs-repos/$OUTDIR/$REPONAME
 
-    export scheduler
     wget_opts="-q --no-check-certificate -N -c -r -nd -nH -p"
     for scheduler in "${SCHEDULERS[@]}"; do
 	mkdir -p $scheduler
