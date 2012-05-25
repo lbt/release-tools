@@ -2,8 +2,6 @@
 ORIG=$PWD
 TOOLS=$PWD/tools
 
-RELEASE=$1
-
 # Get Project configuration
 . tools/release.conf
 
@@ -22,13 +20,66 @@ RELEASE=$1
 #  releases/
 #    This area contains the completed release ready to be rsync'ed to the public server
 
-# Additional controls
-#
-# Set SKIPWGET to skip pulling from the OBS to obs-repos
-# Set RESYNC to only redo the rsync
-# Set PRERELEASE to skip updating the "latest" links
-# Set NORSYNC to skip the push to public servers
-# Set NOGRAB to skip the restructuring into the releases/ area
+usage()
+{
+    cat <<EOF
+    usage: $1 [ --latest | --next ] [--all |  --get-from-obs | --make-repos | --publish ] ] <release>
+
+     Create a repository and MDS release from an OBS project and OBS project repo
+     There are 3 steps
+
+     Specify which steps (one of the following only):
+       --get-from-obs  : Just do the OBS pull and populate ./obs-repos from the OBS API
+       --make-repos    : Just make the zypper repositories from ./obs-repos -> ./releases
+       --publish       : Just publish via rsync
+
+     To perform all the steps (normal use)
+       --all           : Normal release, perform all the steps
+
+
+     Optionally a symbolic link to 'latest' or 'next' can be made:
+       --latest        : Make 'latest' point to the new release
+       --next          : Make 'next' point to the new release
+
+       <release>
+EOF
+    return 0
+}
+
+# Defaults
+PRERELEASE=
+GET_FROM_OBS=1
+MAKE_REPOS=1
+PUBLISH=1
+
+# Must specify STEPS
+STEPS=
+
+while [[ $1 ]] ; do
+    case $1 in
+	--latest ) PRERELEASE=latest;;
+	--next   ) PRERELEASE=next;;
+
+	--all ) if [[ $STEPS ]]; then usage; exit 1; fi
+	    GET_FROM_OBS=1; MAKE_REPOS=1; PUBLISH=1 ;   STEPS=1 ;;
+
+	--get-from-obs ) if [[ $STEPS ]]; then usage; exit 1; fi
+	    GET_FROM_OBS=1; MAKE_REPOS= ; PUBLISH=   ;   STEPS=1 ;;
+
+	--make-repos ) if [[ $STEPS ]]; then usage; exit 1; fi
+	    GET_FROM_OBS= ; MAKE_REPOS=1; PUBLISH=   ;   STEPS=1 ;;
+
+	--publish ) if [[ $STEPS ]]; then usage; exit 1; fi
+	    GET_FROM_OBS= ; MAKE_REPOS= ; PUBLISH=1 ;   STEPS=1 ;;
+
+	* ) if [[ $RELEASE ]]; then usage; exit 1; fi
+	    RELEASE=$1 ;;
+    esac
+    shift
+done
+
+if [[ -z $STEPS ]]; then usage; exit 1; fi
+if [[ -z $RELEASE ]]; then usage; exit 1; fi
 
 build2repo()
 {
@@ -108,12 +159,8 @@ dumpbuild ()
 
 ################
 
-if [ x$1 = x ]; then
-    echo Syntax: tools/createrelease.sh RELEASE
-    exit 0
-fi
-
-if [ x$RESYNC = x -a x$SKIPWGET = x ]; then
+# Step 1 : Get from OBS and update latest/next obs-repo
+if [[ $GET_FROM_OBS ]]; then
     # If a dumpbuild fails, abort
     while read project repo arch scheds ; do
 	echo "Get OBS build for $project with repo $repo for $scheds"
@@ -121,22 +168,18 @@ if [ x$RESYNC = x -a x$SKIPWGET = x ]; then
 	dumpbuild "$API" "$project" ${project}:$RELEASE $repo $scheds
 	set +e
     done <<< $PROJECTS
+
+    if [[ $PRERELEASE ]]; then
+	while read project repo arch scheds ; do
+	    echo "Make $PRERELEASE for $project"
+	    rm -f obs-repos/${project}:$PRERELEASE
+	    ln -s ${project}:$RELEASE obs-repos/${project}:$PRERELEASE
+	done <<< $PROJECTS
+    fi
 fi
 
-while read project repo arch scheds ; do
-    if [ x$PRERELEASE = x ]; then
-	echo "Make latest for $project"
-	rm -f obs-repos/${project}:latest
-	ln -s ${project}:$RELEASE obs-repos/${project}:latest
-    else
-	echo "Make next for $project"
-	rm -f obs-repos/${project}:next
-	ln -s ${project}:$RELEASE obs-repos/${project}:next
-    fi
-done <<< $PROJECTS
-
-
-if [ x$RESYNC = x -a x$NO_GRAB = x ]; then
+# Step 2: Make repos in release area
+if [[ $MAKE_REPOS ]]; then
     if [[ $CROSS ]]; then
 	mkdir -p releases/$RELEASE/builds/i486/cross
 	mkdir -p releases/$RELEASE/builds/i586/cross
@@ -151,29 +194,24 @@ if [ x$RESYNC = x -a x$NO_GRAB = x ]; then
 	createrepo releases/$RELEASE/builds/i486/cross
 	createrepo releases/$RELEASE/builds/i586/cross
     fi
+
+    if [[ $PRERELEASE ]]; then
+	echo $RELEASE > obs-repos/$PRERELEASE.release
+	echo $RELEASE > releases/$PRERELEASE-release
+	rm -f releases/$PRERELEASE
+	ln -s $RELEASE releases/$PRERELEASE
+    fi
 fi
 
-if [ x$NORSYNC = x1 ]; then
-    exit 0
-fi
-
-if [ x$PRERELEASE = x ]; then
-    echo $RELEASE > obs-repos/latest.release
-    echo $RELEASE > releases/latest-release
-    rm -f releases/latest
-    ln -s $RELEASE releases/latest
-else
-    echo $RELEASE > obs-repos/next.release
-    echo $RELEASE > releases/next-release
-    rm -f releases/next
-    ln -s $RELEASE releases/next
-fi
-
+# Step 3: Publish
+if [[ $PUBLISH ]]; then
 
 #rsync -aHx --progress obs-repos/Core\:*\:$RELEASE obs-repos/Core\:*\:latest merreleases@monster.tspre.org:~/public_html/obs-repos/
 #rsync -aHx --progress obs-repos/latest.release obs-repos/next.release merreleases@monster.tspre.org:~/public_html/obs-repos/
 #rsync -aHx --progress releases/$RELEASE merreleases@monster.tspre.org:~/public_html/releases/
 #rsync -aHx --progress releases/latest-release releases/latest releases/next-release releases/next merreleases@monster.tspre.org:~/public_html/releases/
+
+fi
 
 exit 0
 
