@@ -83,6 +83,12 @@ if [[ -z $RELEASE ]]; then usage; exit 1; fi
 if [[ -z $OBSDIR ]] || ! [[ -d $OBSDIR ]] ; then echo "The OBSDIR variable is set to '$OBSDIR' which is not a directory. Please correct this in release.conf"; exit 1; fi
 if [[ -z $RELEASEDIR ]] || ! [[ -d $RELEASEDIR ]] ; then echo "The RELEASEDIR variable is set to '$RELEASEDIR' which is not a directory. Please correct this in release.conf"; exit 1; fi
 
+# Check PROJECTS
+while read -r project repo arch scheds ; do
+    if ! [[ $project ]]; then echo "Invalid blank line in PROJECTS in releases.conf"; exit 1; fi # blank line
+    if ! [[ $scheds ]]; then echo "Invalid line in PROJECTS in releases.conf, no schedulers"; exit 1; fi # not enough values
+done <<< "$PROJECTS"
+
 build2repo()
 {
     # This gets binary rpms from the build RSYNC source path passed into the main script
