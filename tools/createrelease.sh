@@ -110,14 +110,17 @@ build2repo()
     find $RELEASEDIR/$RELEASE/builds/$NAME/packages/ -name \*.rpm | xargs -L1 rpm --delsign
     mv $RELEASEDIR/$RELEASE/builds/$NAME/packages/*/*-debug{info,source}-* $RELEASEDIR/$RELEASE/builds/$NAME/debug/
 
-    # Move all cross- gcc/binutils packages to the relevant arch's cross/ area
-    case $NAME in
-	*86* ) ;; # Ignore cross for i{3,4,5,6}86 and x86_64 ?
-	* )
-	    echo "Preparing /cross" # This may need to be handled better with x86_64 etc
-	    mv $RELEASEDIR/$RELEASE/builds/$NAME/packages/*/cross-*{gcc,binutils}*.i{4,5}86.rpm $RELEASEDIR/$RELEASE/builds/i486/cross/
-	    ;;
-    esac
+    if [[ $CROSS ]]; then
+        # Move all cross- gcc/binutils packages to the relevant arch's cross/ area
+	case $NAME in
+	    *86* ) ;; # Ignore cross for i{3,4,5,6}86 and x86_64 ?
+	    * )
+		echo "Preparing /cross" # This may need to be handled better with x86_64 etc
+		mv $RELEASEDIR/$RELEASE/builds/$NAME/packages/*/cross-*{gcc,binutils}*.i{4,5}86.rpm $RELEASEDIR/$RELEASE/builds/i486/cross/
+		;;
+	esac
+    fi
+
     # Phase 2 : Apply package groups and create repository
     if [ -e $GROUPXML ] ; then
 	createrepo -g $GROUPXML $RELEASEDIR/$RELEASE/builds/$NAME/packages/
