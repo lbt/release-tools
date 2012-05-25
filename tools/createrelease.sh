@@ -171,14 +171,14 @@ if [[ $GET_FROM_OBS ]]; then
 	set -e
 	dumpbuild "$API" "$project" ${project}:$RELEASE $repo $scheds
 	set +e
-    done <<< $PROJECTS
+    done <<< "$PROJECTS"
 
     if [[ $PRERELEASE ]]; then
 	while read -r project repo arch scheds ; do
 	    echo "Make $PRERELEASE for $project"
 	    rm -f $OBSDIR/${project}:$PRERELEASE
 	    ln -s ${project}:$RELEASE $OBSDIR/${project}:$PRERELEASE
-	done <<< $PROJECTS
+	done <<< "$PROJECTS"
     fi
 fi
 
@@ -195,7 +195,7 @@ if [[ $MAKE_REPOS ]]; then
 	projdir=${project//:/:\/}
 	build2repo $RSYNC/${projdir}/$repo $arch $ORIG/obs-projects/Core/$NAME/group.xml $ORIG/obs-projects/Core/$NAME/patterns.xml
         # Now update the repo in the cross areas (this will need some grouping generated for easy installation)
-    done <<< $PROJECTS
+    done <<< "$PROJECTS"
     if [[ $CROSS ]]; then
 	createrepo $RELEASEDIR/$RELEASE/builds/i486/cross
 	createrepo $RELEASEDIR/$RELEASE/builds/i586/cross
