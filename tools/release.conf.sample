@@ -7,6 +7,12 @@ Mer:Tools Mer_Core_i486 i586 i586
 # Set this to 1 if there are x86 cross- binaries in the arm/mips repos
 CROSS=
 
+# Set this to 1 if the rpms need publishing for a remote MDS
+PUBLISH_OBS=
+
+# Set this to 1 if the src rpms need publishing
+PUBLISH_SRC=
+
 # This should point to a public api
 API=https://api.pub.meego.com/public
 

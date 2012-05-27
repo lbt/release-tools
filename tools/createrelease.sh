@@ -147,7 +147,9 @@ build2repo()
     # Phase 1 : get and prepare rpms
     mkdir -p $RELEASEDIR/$RELEASE/builds/$NAME/{packages,debug}
     echo copying from OBS repo to releases
-    rsync  -aHx --verbose $RSYNCPATH/* --exclude=*.src.rpm --exclude=repocache/ --exclude=*.repo --exclude=repodata/ --exclude=src/ --exclude=dontuse/ --include=*.rpm $RELEASEDIR/$RELEASE/builds/$NAME/packages/
+    EXCLUDE_SRC=
+    [[ $PUBLISH_SRC ]] || EXCLUDE_SRC="--exclude=*.src.rpm  --exclude=src/"
+    rsync  -aHx --verbose $RSYNCPATH/* $EXCLUDE_SRC --exclude=repocache/ --exclude=*.repo --exclude=repodata/ --exclude=dontuse/ --include=*.rpm $RELEASEDIR/$RELEASE/builds/$NAME/packages/
 
 
     echo removing signatures
@@ -236,14 +238,17 @@ fi
 if [[ $PUBLISH ]]; then
     echo "################################################################ Publish"
 
-    while read -r project repo arch scheds ; do
-	echo "Publish OBS build for $project"
-	rsync -aHx --progress $OBSDIR/${project}:$RELEASE $RSYNC_OBS_PUBLISH
+    # If the rpms are needed by a remote MDS
+    if [[ $PUBLISH_OBS ]]; then
+	while read -r project repo arch scheds ; do
+	    echo "Publish OBS build for $project"
+	    rsync -aHx --progress $OBSDIR/${project}:$RELEASE $RSYNC_OBS_PUBLISH
 
-	if [[ $PRERELEASE ]]; then
-	    rsync -aHx --progress $OBSDIR/${project}:$PRERELEASE $OBSDIR/$PRERELEASE.release $RSYNC_OBS_PUBLISH
-	fi
-    done <<< "$PROJECTS"
+	    if [[ $PRERELEASE ]]; then
+		rsync -aHx --progress $OBSDIR/${project}:$PRERELEASE $OBSDIR/$PRERELEASE.release $RSYNC_OBS_PUBLISH
+	    fi
+	done <<< "$PROJECTS"
+    fi
 
     echo "Publish Repos for $project with repo $repo for $scheds"
     rsync -aHx --progress $RELEASEDIR/$RELEASE $RSYNC_REPO_PUBLISH
