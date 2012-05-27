@@ -8,6 +8,7 @@ Mer:Tools Mer_Core_i486 i586 i586
 CROSS=
 
 # Set this to 1 if the rpms need publishing for a remote MDS
+# Note that if this is not set, the metadata for the project will not be retrieved from the OBS
 PUBLISH_OBS=
 
 # Set this to 1 if the src rpms need publishing

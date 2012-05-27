@@ -187,7 +187,7 @@ build2repo()
 
 # Step 1 : Get from OBS and update latest/next obs-repo
 # This populates ./obs-repos
-if [[ $GET_FROM_OBS ]]; then
+if [[ $GET_FROM_OBS ]] && [[ $PUBLISH_OBS ]]; then
     echo "################################################################ Get from OBS"
     # If a dumpbuild fails, abort
     while read -r project repo arch scheds ; do
