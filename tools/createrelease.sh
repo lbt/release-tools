@@ -29,7 +29,7 @@ usage()
                the rsync source and targets etc) are given in a config
                file. If none is provided then release.conf is used.
 
-     Specify which steps (one of the following only):
+     Specify which steps (one or more of the following):
        --get-from-obs  : Just do the OBS pull and populate ./obs-repos
                           from the OBS API
        --make-repos    : Just make the zypper repositories from
@@ -67,17 +67,13 @@ while [[ $1 ]] ; do
 	--latest ) PRERELEASE=latest;;
 	--next   ) PRERELEASE=next;;
 
-	--all ) if [[ $STEPS ]]; then usage; exit 1; fi
-	    GET_FROM_OBS=1; MAKE_REPOS=1; PUBLISH=1 ;   STEPS=1 ;;
+	--all ) GET_FROM_OBS=1; MAKE_REPOS=1; PUBLISH=1 ; STEPS=1 ;;
 
-	--get-from-obs ) if [[ $STEPS ]]; then usage; exit 1; fi
-	    GET_FROM_OBS=1; MAKE_REPOS= ; PUBLISH=   ;   STEPS=1 ;;
+	--get-from-obs ) GET_FROM_OBS=1 ; STEPS=1 ;;
 
-	--make-repos ) if [[ $STEPS ]]; then usage; exit 1; fi
-	    GET_FROM_OBS= ; MAKE_REPOS=1; PUBLISH=   ;   STEPS=1 ;;
+	--make-repos ) MAKE_REPOS=1 ; STEPS=1 ;;
 
-	--publish ) if [[ $STEPS ]]; then usage; exit 1; fi
-	    GET_FROM_OBS= ; MAKE_REPOS= ; PUBLISH=1 ;   STEPS=1 ;;
+	--publish ) PUBLISH=1 ; STEPS=1 ;;
 
 	* ) if [[ $RELEASE ]]; then usage; exit 1; fi
 	    RELEASE=$1 ;;
@@ -128,7 +124,8 @@ dumpbuild ()
 	wget $wget_opts -P $targetdir $baseurl/_repository?view=solvstate
 	echo Getting binaries for $scheduler
 	python $ORIG/tools/printbinaries.py "$targetdir/_repository?view=names" | while read -r binaries ; do
-	    curl -sS "$baseurl/_repository?$binaries" | (cd $targetdir; cpio -idvm)
+	    while ! curl -sS "$baseurl/_repository?$binaries" | (cd $targetdir; cpio -idvm); do
+		echo "cpio error detected: Retrying $baseurl/_repository?$binaries"
 	done
     done
 }
@@ -217,7 +214,7 @@ if [[ $MAKE_REPOS ]]; then
     while read -r project repo arch scheds ; do
 	echo "Make repos for $project"
 	projdir=${project//:/:\/}
-	build2repo $RSYNC/${projdir}/$repo $arch $ORIG/obs-projects/Core/$NAME/group.xml $ORIG/obs-projects/Core/$NAME/patterns.xml
+	build2repo $RSYNC/${projdir}/$repo $arch $GROUP_XML $PATTERNS_XML
         # Now update the repo in the cross areas (this will need some grouping generated for easy installation)
     done <<< "$PROJECTS"
     if [[ $CROSS ]]; then
@@ -257,4 +254,16 @@ if [[ $PUBLISH ]]; then
     fi
 fi
 
-exit 0
+echo "WARNING: Group and Patterns not applied correctly"
+
+exit 0 
+
+cat <<EOF > 
+[Mer_OBS_2.3.1mer1]
+name=Mer OBS 2.3.1mer1
+type=rpm-md
+baseurl=${PUBLIC_URL}/2.3.1mer1.02/builds/i586/packages/
+gpgcheck=0
+gpgkey=
+enabled=1
+EOF
