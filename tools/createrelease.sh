@@ -215,7 +215,7 @@ if [[ $MAKE_REPOS ]]; then
     while read -r project repo arch scheds ; do
 	echo "Make repos for $project"
 	projdir=${project//:/:\/}
-	build2repo $RSYNC/${projdir}/$repo $arch $GROUP_XML $PATTERNS_XML
+	build2repo $RSYNC/${projdir}/$repo "$arch" "$GROUP_XML" "$PATTERNS_XML"
         # Now update the repo in the cross areas (this will need some grouping generated for easy installation)
     done <<< "$PROJECTS"
     if [[ $CROSS ]]; then
