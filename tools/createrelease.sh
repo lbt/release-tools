@@ -126,6 +126,7 @@ dumpbuild ()
 	python $ORIG/tools/printbinaries.py "$targetdir/_repository?view=names" | while read -r binaries ; do
 	    while ! curl -sS "$baseurl/_repository?$binaries" | (cd $targetdir; cpio -idvm); do
 		echo "cpio error detected: Retrying $baseurl/_repository?$binaries"
+	    done
 	done
     done
 }
@@ -165,13 +166,13 @@ build2repo()
     fi
 
     # Phase 2 : Apply package groups and create repository
-    if [ -e $GROUPXML ] ; then
+    if [ -e "$GROUPXML" ] ; then
 	createrepo -g $GROUPXML $RELEASEDIR/$RELEASE/builds/$NAME/packages/
     else
 	createrepo $RELEASEDIR/$RELEASE/builds/$NAME/packages/
     fi
-    [ -e $PATTERNXML ] && {
-	cp $PATTERNXML $RELEASEDIR/$RELEASE/builds/$NAME/packages/repodata/
+    [ -e "$PATTERNXML" ] && {
+	cp $PATTERNXML $RELEASEDIR/$RELEASE/builds/$NAME/packages/repodata/patterns.xml
 	modifyrepo $RELEASEDIR/$RELEASE/builds/$NAME/packages/repodata/patterns.xml $RELEASEDIR/$RELEASE/builds/$NAME/packages/repodata/
     }
     # No need for package groups in debug symbols
