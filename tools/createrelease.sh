@@ -29,6 +29,8 @@ usage()
                the rsync source and targets etc) are given in a config
                file. If none is provided then release.conf is used.
 
+     --verbose         : Turn verbosity on
+
      Specify which steps (one or more of the following):
        --get-from-obs  : Just do the OBS pull and populate ./obs-repos
                           from the OBS API
@@ -55,6 +57,7 @@ PRERELEASE=
 GET_FROM_OBS=
 MAKE_REPOS=
 PUBLISH=
+RSYNC_FLAGS=
 
 # Must specify STEPS
 STEPS=
@@ -75,6 +78,8 @@ while [[ $1 ]] ; do
 
 	--publish ) PUBLISH=1 ; STEPS=1 ;;
 
+	--verbose ) VERBOSE=1 ;;
+
 	* ) if [[ $RELEASE ]]; then usage; exit 1; fi
 	    RELEASE=$1 ;;
     esac
@@ -83,6 +88,10 @@ done
 
 # Get Project configuration
 . $CONFIG
+
+if [[ -n $VERBOSE ]]; then 
+    RSYNC_FLAGS+=--verbose
+fi
 
 if [[ -z $STEPS ]]; then usage; exit 1; fi
 if [[ -z $RELEASE ]]; then usage; exit 1; fi
@@ -147,7 +156,7 @@ build2repo()
     echo copying from OBS repo to releases
     EXCLUDE_SRC=
     [[ $PUBLISH_SRC ]] || EXCLUDE_SRC="--exclude=*.src.rpm  --exclude=src/"
-    rsync  -aHx --verbose $RSYNCPATH/* $EXCLUDE_SRC --exclude=repocache/ --exclude=*.repo --exclude=repodata/ --exclude=dontuse/ --include=*.rpm $RELEASEDIR/$RELEASE/builds/$NAME/packages/
+    rsync  -aHx $RSYNC_FLAGS $RSYNCPATH/* $EXCLUDE_SRC --exclude=repocache/ --exclude=*.repo --exclude=repodata/ --exclude=dontuse/ --include=*.rpm $RELEASEDIR/$RELEASE/builds/$NAME/packages/
 
 
     echo removing signatures
