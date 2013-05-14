@@ -52,9 +52,9 @@ EOF
 # Defaults
 CONFIG="tools/release.conf"
 PRERELEASE=
-GET_FROM_OBS=1
-MAKE_REPOS=1
-PUBLISH=1
+GET_FROM_OBS=
+MAKE_REPOS=
+PUBLISH=
 
 # Must specify STEPS
 STEPS=
@@ -167,7 +167,8 @@ build2repo()
 
     # Phase 2 : Apply package groups and create repository
     if [ -e "$GROUPXML" ] ; then
-	createrepo -g $GROUPXML $RELEASEDIR/$RELEASE/builds/$NAME/packages/
+	cp $GROUPXML /tmp/groups.xml
+	createrepo -g /tmp/groups.xml $RELEASEDIR/$RELEASE/builds/$NAME/packages/
     else
 	createrepo $RELEASEDIR/$RELEASE/builds/$NAME/packages/
     fi
@@ -240,22 +241,20 @@ if [[ $PUBLISH ]]; then
     if [[ $PUBLISH_OBS ]]; then
 	while read -r project repo arch scheds ; do
 	    echo "Publish OBS build for $project"
-	    rsync -aHx --progress $OBSDIR/${project}:$RELEASE $RSYNC_OBS_PUBLISH
+	    rsync -aHx --delete --progress $OBSDIR/${project}:$RELEASE $RSYNC_OBS_PUBLISH
 
 	    if [[ $PRERELEASE ]]; then
-		rsync -aHx --progress $OBSDIR/${project}:$PRERELEASE $OBSDIR/$PRERELEASE.release $RSYNC_OBS_PUBLISH
+		rsync -aHx --delete --progress $OBSDIR/${project}:$PRERELEASE $OBSDIR/$PRERELEASE.release $RSYNC_OBS_PUBLISH
 	    fi
 	done <<< "$PROJECTS"
     fi
 
     echo "Publish Repos for $project with repo $repo for $scheds"
-    rsync -aHx --progress $RELEASEDIR/$RELEASE $RSYNC_REPO_PUBLISH
+    rsync -aHx --delete --progress $RELEASEDIR/$RELEASE $RSYNC_REPO_PUBLISH
     if [[ $PRERELEASE ]]; then
-	    rsync -aHx --progress $RELEASEDIR/$PRERELEASE-release $RELEASEDIR/$PRERELEASE $RSYNC_REPO_PUBLISH
+	    rsync -aHx --delete --progress $RELEASEDIR/$PRERELEASE-release $RELEASEDIR/$PRERELEASE $RSYNC_REPO_PUBLISH
     fi
 fi
-
-echo "WARNING: Group and Patterns not applied correctly"
 
 exit 0 
 
